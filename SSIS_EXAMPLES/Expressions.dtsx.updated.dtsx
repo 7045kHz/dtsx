@@ -1,0 +1,91 @@
+<Executable xmlns="www.microsoft.com/SqlServer/Dts" ExecutableType="Microsoft.Package">
+  <Property Name="PackageFormatVersion">8</Property>
+  <ConnectionManagers>
+    <ConnectionManager refId="Package.ConnectionManagers[PROTO]" CreationName="OLEDB" DTSID="{4805ACE5-78FE-45A3-A39C-7BBDF22E418E}" ObjectName="PROTO">
+      <PropertyExpression Name="ConnectionString">@[User::DB_CS]</PropertyExpression>
+      <ObjectData>
+        <ConnectionManager></ConnectionManager>
+      </ObjectData>
+    </ConnectionManager>
+    <ConnectionManager refId="Package.ConnectionManagers[TEMP_EXPRESSIONS_CSV]" CreationName="FLATFILE" DTSID="{B20B184D-F5EE-4A7F-B56C-22A23D4D09EC}" ObjectName="TEMP_EXPRESSIONS_CSV">
+      <PropertyExpression Name="ConnectionString">@[User::CSV_LOCATION]</PropertyExpression>
+      <ObjectData>
+        <ConnectionManager></ConnectionManager>
+      </ObjectData>
+    </ConnectionManager>
+  </ConnectionManagers>
+  <Variables>
+    <Variable Namespace="User" ObjectName="CSV_DIRECTORY">
+      <VariableValue DataType="8">UpdatedValue</VariableValue>
+    </Variable>
+    <Variable Namespace="User" ObjectName="CSV_FILENAME">
+      <VariableValue DataType="8">Expressions.csv</VariableValue>
+    </Variable>
+    <Variable Namespace="User" ObjectName="CSV_LOCATION">
+      <VariableValue DataType="8">C:\Users\U00001\source\repos\gossisMCP\Documents\SSIS_EXAMPLES\Expressions.csv</VariableValue>
+    </Variable>
+    <Variable Namespace="User" ObjectName="DB_CS">
+      <VariableValue DataType="8">Data Source=T15P;Initial Catalog=PROTO;Provider=MSOLEDBSQL.1;Integrated Security=SSPI;Auto Translate=False;</VariableValue>
+    </Variable>
+    <Variable Namespace="User" ObjectName="DB_NAME">
+      <VariableValue DataType="8">T15P</VariableValue>
+    </Variable>
+  </Variables>
+  <LoggingOptions>
+    <Property Name="EventFilter" DataType="8"></Property>
+    <Property Name="ColumnFilter" EventName="OnError">
+      <Property Name="Computer">-1</Property>
+      <Property Name="Operator">-1</Property>
+      <Property Name="SourceName">-1</Property>
+      <Property Name="SourceID">-1</Property>
+      <Property Name="ExecutionID">-1</Property>
+      <Property Name="MessageText">-1</Property>
+      <Property Name="DataBytes">-1</Property>
+    </Property>
+    <Property Name="ColumnFilter" EventName="OnPostExecute">
+      <Property Name="Computer">-1</Property>
+      <Property Name="Operator">-1</Property>
+      <Property Name="SourceName">-1</Property>
+      <Property Name="SourceID">-1</Property>
+      <Property Name="ExecutionID">-1</Property>
+      <Property Name="MessageText">-1</Property>
+      <Property Name="DataBytes">-1</Property>
+    </Property>
+    <Property Name="ColumnFilter" EventName="OnPreExecute">
+      <Property Name="Computer">-1</Property>
+      <Property Name="Operator">-1</Property>
+      <Property Name="SourceName">-1</Property>
+      <Property Name="SourceID">-1</Property>
+      <Property Name="ExecutionID">-1</Property>
+      <Property Name="MessageText">-1</Property>
+      <Property Name="DataBytes">-1</Property>
+    </Property>
+    <Property Name="ColumnFilter" EventName="OnProgress">
+      <Property Name="Computer">-1</Property>
+      <Property Name="Operator">-1</Property>
+      <Property Name="SourceName">-1</Property>
+      <Property Name="SourceID">-1</Property>
+      <Property Name="ExecutionID">-1</Property>
+      <Property Name="MessageText">-1</Property>
+      <Property Name="DataBytes">-1</Property>
+    </Property>
+    <Property Name="ColumnFilter" EventName="OnTaskFailed">
+      <Property Name="Computer">-1</Property>
+      <Property Name="Operator">-1</Property>
+      <Property Name="SourceName">-1</Property>
+      <Property Name="SourceID">-1</Property>
+      <Property Name="ExecutionID">-1</Property>
+      <Property Name="MessageText">-1</Property>
+      <Property Name="DataBytes">-1</Property>
+    </Property>
+    <Property Name="ColumnFilter" EventName="OnWarning">
+      <Property Name="Computer">-1</Property>
+      <Property Name="Operator">-1</Property>
+      <Property Name="SourceName">-1</Property>
+      <Property Name="SourceID">-1</Property>
+      <Property Name="ExecutionID">-1</Property>
+      <Property Name="MessageText">-1</Property>
+      <Property Name="DataBytes">-1</Property>
+    </Property>
+  </LoggingOptions>
+</Executable>
