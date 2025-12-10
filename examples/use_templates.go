@@ -60,9 +60,10 @@ func main() {
 		fmt.Printf("✓ Template instantiated successfully\n")
 		fmt.Printf("✓ Package name: %s\n", pkg.Property[0].Value)
 
-		// Validate the generated package
+		// Validate the generated package using PackageValidator
 		fmt.Println("\nValidating generated package...")
-		errors := pkg.Validate()
+		validator := dtsx.NewPackageValidator(pkg)
+		errors := validator.Validate()
 		if len(errors) > 0 {
 			fmt.Printf("Validation issues found (%d):\n", len(errors))
 			for _, err := range errors {

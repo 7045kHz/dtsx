@@ -882,7 +882,7 @@ func parseFactor(tokens []Token, pos int) (Expr, int, error) {
 		return nil, pos, fmt.Errorf("unexpected identifier: %s", token.Value)
 	case "lparen":
 		// Parenthesized expression
-		expr, newPos, err := parseExpr(tokens, pos-1) // -1 because we already consumed (
+		expr, newPos, err := parseExpr(tokens, pos)
 		if err != nil {
 			return nil, newPos, err
 		}

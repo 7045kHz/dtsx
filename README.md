@@ -101,18 +101,21 @@ err := dtsx.MarshalToWriter(writer, pkg)
 Evaluate SSIS expressions with full support for variables, arithmetic, functions, conditionals, and type casting:
 
 ```go
+// Create parser for efficient expression evaluation with caching
+parser := dtsx.NewPackageParser(pkg)
+
 // Basic arithmetic and variables
-result, err := dtsx.EvaluateExpression("@[User::MyVar] + 1", pkg)
+result, err := parser.EvaluateExpression("@[User::MyVar] + 1")
 
 // Built-in functions
-result, err = dtsx.EvaluateExpression("UPPER(@[User::Name])", pkg)
-result, err = dtsx.EvaluateExpression("DATEADD(\"DAY\", 7, @[User::StartDate])", pkg)
+result, err = parser.EvaluateExpression("UPPER(@[User::Name])")
+result, err = parser.EvaluateExpression("DATEADD(\"DAY\", 7, @[User::StartDate])")
 
 // Conditional expressions
-result, err = dtsx.EvaluateExpression("@[User::Count] > 10 ? \"High\" : \"Low\"", pkg)
+result, err = parser.EvaluateExpression("@[User::Count] > 10 ? \"High\" : \"Low\"")
 
 // Type casting
-result, err = dtsx.EvaluateExpression("(DT_STR) @[User::Number]", pkg)
+result, err = parser.EvaluateExpression("(DT_STR) @[User::Number]")
 ```
 
 ### Package Builder API
@@ -129,10 +132,11 @@ pkg := dtsx.NewPackageBuilder().
 
 ### Package Validation
 
-Validate packages for common issues:
+Validate packages for common issues using the comprehensive PackageValidator:
 
 ```go
-errors := pkg.Validate()
+validator := dtsx.NewPackageValidator(pkg)
+errors := validator.Validate()
 for _, err := range errors {
     fmt.Printf("[%s] %s: %s\n", err.Severity, err.Path, err.Message)
 }
@@ -201,7 +205,7 @@ for _, err := range errors {
 
 ### Template System
 
-Use reusable package templates for common ETL patterns:
+Use reusable package templates for common ETL patterns. See [TEMPLATES.md](TEMPLATES.md) for comprehensive documentation:
 
 ```go
 registry := dtsx.GetDefaultTemplateRegistry()
@@ -248,7 +252,7 @@ allExecutables := pkg.QueryExecutables(func(*schema.AnyNonPackageExecutableType)
 
 // Find SQL tasks
 sqlTasks := pkg.QueryExecutables(func(exec *schema.AnyNonPackageExecutableType) bool {
-    return exec.ExecutableTypeAttr == "STOCK:SQLTask"
+    return exec.ExecutableTypeAttr == "ExecuteSQLTask"
 })
 
 // Find tasks with expressions
@@ -303,12 +307,12 @@ for _, expr := range exprs {
 
 ### Advanced Methods
 
-- `EvaluateExpression(expr string, pkg *Package) (interface{}, error)` - Evaluate SSIS expression
-- `Validate() []ValidationError` - Validate package for issues
+- `EvaluateExpression(expr string, pkg *Package) (interface{}, error)` - Evaluate SSIS expression (use PackageParser for better performance)
+- `Validate() []ValidationError` - Validate package for issues (use PackageValidator for comprehensive validation)
 - `BuildDependencyGraph() *DependencyGraph` - Build dependency graph
 - `GetUnusedVariables() []string` - Find unused variables
 - `GetOptimizationSuggestions() []ValidationError` - Get optimization suggestions
-- `NewPackageParser(pkg *Package) *PackageParser` - Create centralized parser
+- `NewPackageParser(pkg *Package) *PackageParser` - Create centralized parser with caching
 - `NewPrecedenceAnalyzer(pkg *Package) *PrecedenceAnalyzer` - Create execution order analyzer
 - `NewPackageValidator(pkg *Package) *PackageValidator` - Create comprehensive validator
 
@@ -425,6 +429,7 @@ go test ./...
 ├── schemas/                # XSD schema files
 ├── SSIS_EXAMPLES/          # Sample DTSX files (for testing)
 ├── QUICKSTART.md           # Detailed usage guide
+├── TEMPLATES.md            # Template system documentation
 └── README.md               # This file
 ```
 

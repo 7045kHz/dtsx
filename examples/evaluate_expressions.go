@@ -41,8 +41,8 @@ func main() {
 		log.Fatalf("Failed to load DTSX file: %v", err)
 	}
 
-	fmt.Printf("=== SSIS Expression Evaluation Demo ===\n")
-	fmt.Printf("File: %s\n\n", filename)
+	// Create parser for expression evaluation with caching
+	parser := dtsx.NewPackageParser(pkg)
 
 	// Show available variables first
 	variables := pkg.GetVariables()
@@ -130,7 +130,7 @@ func main() {
 		fmt.Printf("%d. %s\n", i+1, test.description)
 		fmt.Printf("   Expression: %s\n", test.expression)
 
-		result, err := dtsx.EvaluateExpression(test.expression, pkg)
+		result, err := parser.EvaluateExpression(test.expression)
 		if err != nil {
 			fmt.Printf("   ❌ Error: %v\n", err)
 		} else {
@@ -157,7 +157,7 @@ func main() {
 			}
 
 			// Try to evaluate the expression
-			result, err := dtsx.EvaluateExpression(expr.Expression, pkg)
+			result, err := parser.EvaluateExpression(expr.Expression)
 			if err != nil {
 				fmt.Printf("   ❌ Evaluation failed: %v\n", err)
 			} else {

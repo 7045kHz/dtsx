@@ -1100,3 +1100,582 @@ func TestUpdateProperty(t *testing.T) {
 		t.Error("Expected error when updating property on nil package")
 	}
 }
+
+// TestPackageParser tests the PackageParser functionality
+func TestPackageParser(t *testing.T) {
+	// Create a test package with variables, connections, and executables
+	pkg := &dtsx.Package{
+		ExecutableTypePackage: &schema.ExecutableTypePackage{
+			Variables: &schema.VariablesType{
+				Variable: []*schema.VariableType{
+					{
+						NamespaceAttr:  stringPtr("User"),
+						ObjectNameAttr: stringPtr("MyVar"),
+						VariableValue: &schema.VariableValue{
+							Value: "42",
+						},
+					},
+					{
+						NamespaceAttr:  stringPtr("User"),
+						ObjectNameAttr: stringPtr("StrVar"),
+						VariableValue: &schema.VariableValue{
+							Value: "hello world",
+						},
+					},
+				},
+			},
+			ConnectionManagers: &schema.ConnectionManagersType{
+				ConnectionManager: []*schema.ConnectionManagerType{
+					{
+						ObjectNameAttr:   stringPtr("TestConn"),
+						CreationNameAttr: stringPtr("OLEDB"),
+						Property: []*schema.Property{
+							{
+								NameAttr: stringPtr("ConnectionString"),
+								PropertyElementBaseType: &schema.PropertyElementBaseType{
+									AnySimpleType: &schema.AnySimpleType{
+										Value: "Server=test;Database=test",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			Executable: []*schema.AnyNonPackageExecutableType{
+				{
+					RefIdAttr:          stringPtr("Package.TestTask"),
+					ObjectNameAttr:     stringPtr("TestTask"),
+					ExecutableTypeAttr: "ExecuteSQLTask",
+					Property: []*schema.Property{
+						{
+							NameAttr: stringPtr("SqlStatementSource"),
+							PropertyElementBaseType: &schema.PropertyElementBaseType{
+								AnySimpleType: &schema.AnySimpleType{
+									Value: "SELECT * FROM TestTable",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// Create parser
+	parser := dtsx.NewPackageParser(pkg)
+
+	// Test GetVariableValue
+	t.Run("GetVariableValue", func(t *testing.T) {
+		val, err := parser.GetVariableValue("User::MyVar")
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+		if val != 42.0 {
+			t.Errorf("Expected 42.0, got %v", val)
+		}
+
+		// Test non-existent variable
+		_, err = parser.GetVariableValue("User::NonExistent")
+		if err == nil {
+			t.Error("Expected error for non-existent variable")
+		}
+	})
+
+	// Test GetConnectionManager
+	t.Run("GetConnectionManager", func(t *testing.T) {
+		conn, err := parser.GetConnectionManager("TestConn")
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+		if conn == nil {
+			t.Fatal("Expected connection manager, got nil")
+		}
+		if *conn.ObjectNameAttr != "TestConn" {
+			t.Errorf("Expected 'TestConn', got %s", *conn.ObjectNameAttr)
+		}
+
+		// Test non-existent connection
+		_, err = parser.GetConnectionManager("NonExistent")
+		if err == nil {
+			t.Error("Expected error for non-existent connection")
+		}
+	})
+
+	// Test GetExecutable
+	t.Run("GetExecutable", func(t *testing.T) {
+		exec, err := parser.GetExecutable("Package.TestTask")
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+		if exec == nil {
+			t.Fatal("Expected executable, got nil")
+		}
+		if *exec.ObjectNameAttr != "TestTask" {
+			t.Errorf("Expected 'TestTask', got %s", *exec.ObjectNameAttr)
+		}
+
+		// Test non-existent executable
+		_, err = parser.GetExecutable("NonExistent")
+		if err == nil {
+			t.Error("Expected error for non-existent executable")
+		}
+	})
+
+	// Test EvaluateExpression with caching
+	t.Run("EvaluateExpression", func(t *testing.T) {
+		// Test variable evaluation
+		result, err := parser.EvaluateExpression("@[User::MyVar]")
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+		if result != 42.0 {
+			t.Errorf("Expected 42.0, got %v", result)
+		}
+
+		// Test string variable
+		result, err = parser.EvaluateExpression("@[User::StrVar]")
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+		if result != "hello world" {
+			t.Errorf("Expected 'hello world', got %v", result)
+		}
+
+		// Test arithmetic
+		result, err = parser.EvaluateExpression("@[User::MyVar] + 10")
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+		if result != 52.0 {
+			t.Errorf("Expected 52.0, got %v", result)
+		}
+
+		// Test caching - evaluate same expression again
+		result2, err := parser.EvaluateExpression("@[User::MyVar] + 10")
+		if err != nil {
+			t.Errorf("Expected no error on cached evaluation, got %v", err)
+		}
+		if result2 != result {
+			t.Errorf("Cached result %v doesn't match original %v", result2, result)
+		}
+	})
+
+	// Test GetSQLStatements
+	t.Run("GetSQLStatements", func(t *testing.T) {
+		statements := parser.GetSQLStatements()
+		if len(statements) != 1 {
+			t.Errorf("Expected 1 SQL statement, got %d", len(statements))
+		}
+
+		stmt := statements[0]
+		if stmt.TaskName != "TestTask" {
+			t.Errorf("Expected task name 'TestTask', got %s", stmt.TaskName)
+		}
+		if stmt.SQL != "SELECT * FROM TestTable" {
+			t.Errorf("Expected SQL 'SELECT * FROM TestTable', got %s", stmt.SQL)
+		}
+		if stmt.TaskType != "Control Flow" {
+			t.Errorf("Expected task type 'Control Flow', got %s", stmt.TaskType)
+		}
+	})
+}
+
+// TestPrecedenceAnalyzer tests the PrecedenceAnalyzer functionality
+func TestPrecedenceAnalyzer(t *testing.T) {
+	// Create a test package with executables and precedence constraints
+	pkg := &dtsx.Package{
+		ExecutableTypePackage: &schema.ExecutableTypePackage{
+			Executable: []*schema.AnyNonPackageExecutableType{
+				{
+					RefIdAttr:          stringPtr("Package.Task1"),
+					ObjectNameAttr:     stringPtr("Task1"),
+					ExecutableTypeAttr: "ExecuteSQLTask",
+					PrecedenceConstraint: []*schema.PrecedenceConstraintType{
+						{
+							Executable: []*schema.PrecedenceConstraintExecutableReferenceType{
+								{
+									IDREFAttr: stringPtr("Package.Task2"),
+								},
+							},
+						},
+					},
+				},
+				{
+					RefIdAttr:          stringPtr("Package.Task2"),
+					ObjectNameAttr:     stringPtr("Task2"),
+					ExecutableTypeAttr: "ExecuteSQLTask",
+				},
+				{
+					RefIdAttr:          stringPtr("Package.Task3"),
+					ObjectNameAttr:     stringPtr("Task3"),
+					ExecutableTypeAttr: "ExecuteSQLTask",
+					PrecedenceConstraint: []*schema.PrecedenceConstraintType{
+						{
+							Executable: []*schema.PrecedenceConstraintExecutableReferenceType{
+								{
+									IDREFAttr: stringPtr("Package.Task1"),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	analyzer := dtsx.NewPrecedenceAnalyzer(pkg)
+
+	// Test GetExecutionOrder
+	t.Run("GetExecutionOrder", func(t *testing.T) {
+		// Task2 should execute first (no dependencies)
+		order, err := analyzer.GetExecutionOrder("Package.Task2")
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+		if order != 1 {
+			t.Errorf("Expected Task2 to execute at order 1, got %d", order)
+		}
+
+		// Task1 depends on Task2, so should execute after
+		order, err = analyzer.GetExecutionOrder("Package.Task1")
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+		if order <= 1 {
+			t.Errorf("Expected Task1 to execute after Task2, got order %d", order)
+		}
+
+		// Task3 depends on Task1, so should execute last
+		order, err = analyzer.GetExecutionOrder("Package.Task3")
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+		task1Order, _ := analyzer.GetExecutionOrder("Package.Task1")
+		if order <= task1Order {
+			t.Errorf("Expected Task3 to execute after Task1, got order %d vs %d", order, task1Order)
+		}
+	})
+
+	// Test GetAllExecutionOrders
+	t.Run("GetAllExecutionOrders", func(t *testing.T) {
+		orders, err := analyzer.GetAllExecutionOrders()
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+
+		if len(orders) != 3 {
+			t.Errorf("Expected 3 execution orders, got %d", len(orders))
+		}
+
+		// Verify all tasks have orders
+		expectedTasks := map[string]bool{
+			"Package.Task1": true,
+			"Package.Task2": true,
+			"Package.Task3": true,
+		}
+
+		for refId := range orders {
+			if !expectedTasks[refId] {
+				t.Errorf("Unexpected task in execution orders: %s", refId)
+			}
+			delete(expectedTasks, refId)
+		}
+
+		if len(expectedTasks) > 0 {
+			t.Errorf("Missing tasks in execution orders: %v", expectedTasks)
+		}
+	})
+
+	// Test GetExecutableChain
+	t.Run("GetExecutableChain", func(t *testing.T) {
+		chain, err := analyzer.GetExecutableChain("Package.Task3")
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+
+		// Chain should include Task3 and its dependencies
+		if len(chain) < 2 {
+			t.Errorf("Expected chain to include at least 2 tasks, got %d", len(chain))
+		}
+
+		// Task3 should be last in chain
+		if chain[len(chain)-1] != "Package.Task3" {
+			t.Errorf("Expected Task3 to be last in chain, got %s", chain[len(chain)-1])
+		}
+	})
+
+	// Test ValidateConstraints
+	t.Run("ValidateConstraints", func(t *testing.T) {
+		errors := analyzer.ValidateConstraints()
+		// Should have no constraint violations for this simple case
+		if len(errors) > 0 {
+			t.Errorf("Expected no constraint violations, got %d: %v", len(errors), errors)
+		}
+	})
+
+	// Test circular dependency detection
+	t.Run("CircularDependency", func(t *testing.T) {
+		// Create a package with circular dependency
+		circularPkg := &dtsx.Package{
+			ExecutableTypePackage: &schema.ExecutableTypePackage{
+				Executable: []*schema.AnyNonPackageExecutableType{
+					{
+						RefIdAttr: stringPtr("Package.A"),
+						PrecedenceConstraint: []*schema.PrecedenceConstraintType{
+							{
+								Executable: []*schema.PrecedenceConstraintExecutableReferenceType{
+									{IDREFAttr: stringPtr("Package.B")},
+								},
+							},
+						},
+					},
+					{
+						RefIdAttr: stringPtr("Package.B"),
+						PrecedenceConstraint: []*schema.PrecedenceConstraintType{
+							{
+								Executable: []*schema.PrecedenceConstraintExecutableReferenceType{
+									{IDREFAttr: stringPtr("Package.A")},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		circularAnalyzer := dtsx.NewPrecedenceAnalyzer(circularPkg)
+		errors := circularAnalyzer.ValidateConstraints()
+
+		if len(errors) == 0 {
+			t.Error("Expected circular dependency error, got none")
+		}
+
+		foundCircular := false
+		for _, err := range errors {
+			if strings.Contains(err.Error(), "circular") || strings.Contains(err.Error(), "Circular") {
+				foundCircular = true
+				break
+			}
+		}
+
+		if !foundCircular {
+			t.Errorf("Expected circular dependency error message, got: %v", errors)
+		}
+	})
+}
+
+// TestPackageValidator tests the PackageValidator functionality
+func TestPackageValidator(t *testing.T) {
+	// Create a test package with various elements to validate
+	pkg := &dtsx.Package{
+		ExecutableTypePackage: &schema.ExecutableTypePackage{
+			Variables: &schema.VariablesType{
+				Variable: []*schema.VariableType{
+					{
+						NamespaceAttr:  stringPtr("User"),
+						ObjectNameAttr: stringPtr("ValidVar"),
+						VariableValue: &schema.VariableValue{
+							Value: "test value",
+						},
+					},
+					{
+						NamespaceAttr:  stringPtr("User"),
+						ObjectNameAttr: stringPtr("EmptyVar"),
+						VariableValue: &schema.VariableValue{
+							Value: "",
+						},
+					},
+					{
+						// Variable with missing name
+						NamespaceAttr: stringPtr("User"),
+						VariableValue: &schema.VariableValue{
+							Value: "value",
+						},
+					},
+				},
+			},
+			ConnectionManagers: &schema.ConnectionManagersType{
+				ConnectionManager: []*schema.ConnectionManagerType{
+					{
+						ObjectNameAttr:   stringPtr("ValidConn"),
+						CreationNameAttr: stringPtr("OLEDB"),
+						Property: []*schema.Property{
+							{
+								NameAttr: stringPtr("ConnectionString"),
+								PropertyElementBaseType: &schema.PropertyElementBaseType{
+									AnySimpleType: &schema.AnySimpleType{
+										Value: "Server=test;Database=test",
+									},
+								},
+							},
+						},
+					},
+					{
+						ObjectNameAttr:   stringPtr("EmptyConn"),
+						CreationNameAttr: stringPtr("OLEDB"),
+						// No properties
+					},
+					{
+						// Connection with missing name
+						CreationNameAttr: stringPtr("OLEDB"),
+						Property: []*schema.Property{
+							{
+								NameAttr: stringPtr("ConnectionString"),
+								PropertyElementBaseType: &schema.PropertyElementBaseType{
+									AnySimpleType: &schema.AnySimpleType{
+										Value: "Server=test",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			Executable: []*schema.AnyNonPackageExecutableType{
+				{
+					RefIdAttr:          stringPtr("Package.Task1"),
+					ObjectNameAttr:     stringPtr("Task1"),
+					ExecutableTypeAttr: "ExecuteSQLTask",
+					PropertyExpression: []*schema.PropertyExpressionElementType{
+						{
+							NameAttr: "SqlStatementSource",
+							AnySimpleType: &schema.AnySimpleType{
+								Value: "@[User::ValidVar]", // Valid expression
+							},
+						},
+					},
+				},
+				{
+					RefIdAttr:          stringPtr("Package.Task2"),
+					ObjectNameAttr:     stringPtr("Task2"),
+					ExecutableTypeAttr: "ExecuteSQLTask",
+					PropertyExpression: []*schema.PropertyExpressionElementType{
+						{
+							NameAttr: "SqlStatementSource",
+							AnySimpleType: &schema.AnySimpleType{
+								Value: "@[User::NonExistentVar]", // Invalid expression
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	validator := dtsx.NewPackageValidator(pkg)
+	errors := validator.Validate()
+
+	// Should find several validation issues
+	if len(errors) == 0 {
+		t.Error("Expected validation errors, got none")
+	}
+
+	// Check for specific error types
+	errorMessages := make([]string, len(errors))
+	for i, err := range errors {
+		errorMessages[i] = err.Message
+	}
+
+	// Check for variable-related errors
+	foundEmptyVar := false
+	foundMissingVarName := false
+	for _, msg := range errorMessages {
+		if strings.Contains(msg, "Variable has no value") {
+			foundEmptyVar = true
+		}
+		if strings.Contains(msg, "Variable missing namespace or name") {
+			foundMissingVarName = true
+		}
+	}
+
+	if !foundEmptyVar {
+		t.Error("Expected error for empty variable value")
+	}
+	if !foundMissingVarName {
+		t.Error("Expected error for variable missing name")
+	}
+
+	// Check for connection-related errors
+	foundEmptyConn := false
+	foundMissingConnName := false
+	for _, msg := range errorMessages {
+		if strings.Contains(msg, "Connection manager has no connection string") {
+			foundEmptyConn = true
+		}
+		if strings.Contains(msg, "Connection manager missing name") {
+			foundMissingConnName = true
+		}
+	}
+
+	if !foundEmptyConn {
+		t.Error("Expected error for connection missing name")
+	}
+	if !foundMissingConnName {
+		t.Error("Expected error for connection missing name")
+	}
+
+	// Check for expression-related errors
+	foundInvalidExpr := false
+	for _, msg := range errorMessages {
+		if strings.Contains(msg, "undefined variable") || strings.Contains(msg, "variable not found") {
+			foundInvalidExpr = true
+		}
+	}
+
+	if !foundInvalidExpr {
+		t.Error("Expected error for expression referencing undefined variable")
+	}
+
+	// Test with valid package
+	t.Run("ValidPackage", func(t *testing.T) {
+		validPkg := &dtsx.Package{
+			ExecutableTypePackage: &schema.ExecutableTypePackage{
+				Variables: &schema.VariablesType{
+					Variable: []*schema.VariableType{
+						{
+							NamespaceAttr:  stringPtr("User"),
+							ObjectNameAttr: stringPtr("TestVar"),
+							VariableValue: &schema.VariableValue{
+								Value: "test",
+							},
+						},
+					},
+				},
+				ConnectionManagers: &schema.ConnectionManagersType{
+					ConnectionManager: []*schema.ConnectionManagerType{
+						{
+							ObjectNameAttr:   stringPtr("TestConn"),
+							CreationNameAttr: stringPtr("OLEDB"),
+							Property: []*schema.Property{
+								{
+									NameAttr: stringPtr("ConnectionString"),
+									PropertyElementBaseType: &schema.PropertyElementBaseType{
+										AnySimpleType: &schema.AnySimpleType{
+											Value: "Server=test",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				Executable: []*schema.AnyNonPackageExecutableType{
+					{
+						RefIdAttr:          stringPtr("Package.Task"),
+						ObjectNameAttr:     stringPtr("Task"),
+						ExecutableTypeAttr: "ExecuteSQLTask",
+					},
+				},
+			},
+		}
+
+		validValidator := dtsx.NewPackageValidator(validPkg)
+		validErrors := validValidator.Validate()
+
+		// Should have fewer errors than the invalid package
+		if len(validErrors) >= len(errors) {
+			t.Errorf("Expected valid package to have fewer errors than invalid package, got %d vs %d", len(validErrors), len(errors))
+		}
+	})
+}
