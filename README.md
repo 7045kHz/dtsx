@@ -2,6 +2,14 @@
 
 A comprehensive Go library for reading, writing, and analyzing DTSX (SQL Server Integration Services) XML files with advanced expression evaluation and package management capabilities.
 
+## Important Notice:
+
+- This project is under active development. While many features are implemented and tested, some advanced SSIS functionalities may not be fully supported yet.
+- This project is not affiliated with or endorsed by Microsoft. It is an independent implementation for working with SSIS DTSX files in Go.
+- DTSX files can be complex and may contain proprietary elements. This library aims to provide robust support for common DTSX features but may not cover all edge cases or custom components.
+- Use this library at your own risk, especially in production environments. Always validate and test packages thoroughly.
+- Contributions and feedback are welcome to improve compatibility and functionality.
+
 ## Features
 
 - **Parse DTSX files**: Read and unmarshal DTSX XML files into Go structs
@@ -14,6 +22,9 @@ A comprehensive Go library for reading, writing, and analyzing DTSX (SQL Server 
 - **Template System**: Reusable package templates for common ETL patterns
 - **Query API**: Convenient methods to analyze connections, variables, executables, and expressions
 - **Connection Analysis**: Comprehensive analysis of connection managers with drivers and dynamic properties
+- **SQL Extraction**: Extract SQL statements from control flow and dataflow tasks
+- **Execution Order Analysis**: Topological sorting and precedence constraint analysis
+- **Package Parser**: Centralized parsing with caching for performance
 - **Full schema support**: Generated from official SSIS XSD schemas with container element support
 - **Type-safe**: Strongly typed Go structures for all DTSX elements
 
@@ -137,9 +148,60 @@ impact := graph.GetVariableImpact("User::MyVariable")
 fmt.Printf("Variable used in %d locations\n", len(impact))
 ```
 
+### Package Parser
+
+Use the centralized PackageParser for efficient analysis with caching:
+
+```go
+parser := dtsx.NewPackageParser(pkg)
+
+// Get SQL statements from all tasks
+sqlStatements := parser.GetSQLStatements()
+for _, stmt := range sqlStatements {
+    fmt.Printf("Task: %s (%s) - SQL: %s\n", stmt.TaskName, stmt.TaskType, stmt.SQL)
+}
+
+// Evaluate expressions with caching
+result, err := parser.EvaluateExpression("@[User::MyVar] + 1")
+```
+
+### Execution Order Analysis
+
+Analyze task execution order and precedence constraints:
+
+```go
+analyzer := dtsx.NewPrecedenceAnalyzer(pkg)
+
+// Get execution order for a specific task
+order, err := analyzer.GetExecutionOrder("Package\\MyTask")
+fmt.Printf("Task executes at order: %d\n", order)
+
+// Get all execution orders
+orders, err := analyzer.GetAllExecutionOrders()
+for refId, order := range orders {
+    fmt.Printf("%s: Order %d\n", refId, order)
+}
+
+// Validate precedence constraints
+errors := analyzer.ValidateConstraints()
+```
+
+### Enhanced Package Validation
+
+Use the comprehensive PackageValidator for detailed analysis:
+
+```go
+validator := dtsx.NewPackageValidator(pkg)
+errors := validator.Validate()
+
+for _, err := range errors {
+    fmt.Printf("[%s] %s: %s\n", err.Severity, err.Path, err.Message)
+}
+```
+
 ### Template System
 
-Use reusable package templates:
+Use reusable package templates for common ETL patterns:
 
 ```go
 registry := dtsx.GetDefaultTemplateRegistry()
@@ -246,6 +308,28 @@ for _, expr := range exprs {
 - `BuildDependencyGraph() *DependencyGraph` - Build dependency graph
 - `GetUnusedVariables() []string` - Find unused variables
 - `GetOptimizationSuggestions() []ValidationError` - Get optimization suggestions
+- `NewPackageParser(pkg *Package) *PackageParser` - Create centralized parser
+- `NewPrecedenceAnalyzer(pkg *Package) *PrecedenceAnalyzer` - Create execution order analyzer
+- `NewPackageValidator(pkg *Package) *PackageValidator` - Create comprehensive validator
+
+### PackageParser Methods
+
+- `GetVariableValue(name string) (interface{}, error)` - Get variable value by name
+- `GetConnectionManager(id string) (*schema.ConnectionManagerType, error)` - Get connection manager
+- `GetExecutable(refId string) (*schema.AnyNonPackageExecutableType, error)` - Get executable
+- `EvaluateExpression(expr string) (interface{}, error)` - Evaluate expression with caching
+- `GetSQLStatements() []*SQLStatement` - Extract all SQL statements
+
+### PrecedenceAnalyzer Methods
+
+- `GetExecutionOrder(refId string) (int, error)` - Get execution order for task
+- `GetAllExecutionOrders() (map[string]int, error)` - Get all execution orders
+- `GetExecutableChain(refId string) ([]string, error)` - Get execution chain
+- `ValidateConstraints() []error` - Validate precedence constraints
+
+### PackageValidator Methods
+
+- `Validate() []*ValidationError` - Comprehensive package validation
 
 ### Builder API
 
@@ -290,6 +374,9 @@ go run examples/query_dtsx.go path/to/your/package.dtsx
 # Comprehensive connection analysis with expressions and variables
 go run examples/analyze_connections.go path/to/your/package.dtsx
 
+# Advanced package analysis with parser, validator, and analyzer
+go run examples/package_analysis.go path/to/your/package.dtsx
+
 # Validate package for issues
 go run examples/validate_dtsx.go path/to/your/package.dtsx
 
@@ -328,13 +415,13 @@ go test ./...
 
 ```
 .
-├── dtsx.go                 # Main package with marshal/unmarshal functions
-├── expression.go           # Advanced SSIS expression evaluator
+├── dtsx.go                 # Main package with marshal/unmarshal functions, PackageParser, PrecedenceAnalyzer, PackageValidator
+├── expression.go           # Advanced SSIS expression evaluator with caching
 ├── templates.go            # Reusable package templates
 ├── dtsx_test.go            # Comprehensive tests
 ├── dtsx/
 │   └── schemas/            # Generated schema types
-├── examples/               # Example code
+├── examples/               # Example code including package_analysis.go
 ├── schemas/                # XSD schema files
 ├── SSIS_EXAMPLES/          # Sample DTSX files (for testing)
 ├── QUICKSTART.md           # Detailed usage guide

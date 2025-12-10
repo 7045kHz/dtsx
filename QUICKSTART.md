@@ -203,42 +203,97 @@ for _, s := range suggestions {
 }
 ```
 
-### Template System
+### Package Parser
 
-Use reusable package templates for common ETL patterns:
+Use the centralized PackageParser for efficient analysis with built-in caching:
 
 ```go
-// Get the default template registry
-registry := dtsx.GetDefaultTemplateRegistry()
+// Create parser for advanced analysis
+parser := dtsx.NewPackageParser(pkg)
 
-// List available templates
-templates := registry.List()
-fmt.Printf("Available templates: %v\n", templates)
-
-// Get a specific template
-template := registry.Get("Basic ETL")
-if template != nil {
-    fmt.Printf("Template: %s - %s\n", template.Name, template.Description)
-    fmt.Printf("Parameters: %v\n", template.Parameters)
+// Extract all SQL statements from control flow and dataflow tasks
+sqlStatements := parser.GetSQLStatements()
+for _, stmt := range sqlStatements {
+    fmt.Printf("Task: %s (%s)\n", stmt.TaskName, stmt.TaskType)
+    fmt.Printf("  SQL: %s\n", stmt.SQL)
+    if len(stmt.Connections) > 0 {
+        fmt.Printf("  Connections: %v\n", stmt.Connections)
+    }
 }
 
-// Instantiate a template with custom parameters
-params := map[string]interface{}{
-    "SourceConnection":     "Server=myserver;Database=sourcedb",
-    "DestinationConnection": "Server=myserver;Database=destdb",
-    "SourceQuery":          "SELECT id, name FROM customers",
-    "DestinationTable":     "customers_backup",
-    "BatchSize":           "5000",
+// Evaluate expressions with automatic caching for performance
+result, err := parser.EvaluateExpression("@[User::MyVar] + @[User::Increment]")
+if err == nil {
+    fmt.Printf("Result: %v\n", result)
 }
 
-pkg, err := template.Instantiate(params)
-if err != nil {
-    log.Fatal(err)
-}
-
-// The template is now customized and ready to use
-err = dtsx.MarshalToFile("custom_etl.dtsx", pkg)
+// Access variables and connections efficiently
+varValue, err := parser.GetVariableValue("User::MyVariable")
+connMgr, err := parser.GetConnectionManager("MyConnection")
 ```
+
+### Execution Order Analysis
+
+Analyze task execution order and precedence constraints:
+
+```go
+// Create precedence analyzer
+analyzer := dtsx.NewPrecedenceAnalyzer(pkg)
+
+// Get execution order for specific tasks
+order, err := analyzer.GetExecutionOrder("Package\\DataFlowTask")
+if err == nil {
+    fmt.Printf("Task executes at order: %d\n", order)
+}
+
+// Get execution orders for all tasks
+allOrders, err := analyzer.GetAllExecutionOrders()
+if err == nil {
+    for refId, order := range allOrders {
+        fmt.Printf("%s: Order %d\n", refId, order)
+    }
+}
+
+// Get the execution chain (all predecessors) for a task
+chain, err := analyzer.GetExecutableChain("Package\\FinalTask")
+if err == nil {
+    fmt.Printf("Execution chain: %v\n", chain)
+}
+
+// Validate precedence constraints for circular dependencies
+constraintErrors := analyzer.ValidateConstraints()
+for _, err := range constraintErrors {
+    fmt.Printf("Constraint error: %v\n", err)
+}
+```
+
+### Enhanced Package Validation
+
+Use the comprehensive PackageValidator for detailed package analysis:
+
+```go
+// Create validator
+validator := dtsx.NewPackageValidator(pkg)
+
+// Perform comprehensive validation
+validationErrors := validator.Validate()
+
+// Display results by severity
+for _, err := range validationErrors {
+    fmt.Printf("[%s] %s: %s\n", err.Severity, err.Path, err.Message)
+    if err.Severity == "error" {
+        // Handle critical errors
+    }
+}
+```
+
+The validator checks for:
+
+- Expression evaluation errors
+- Missing or invalid connection properties
+- Precedence constraint violations
+- Variable scoping issues
+- Structural problems
 
 Built-in templates include:
 
@@ -265,6 +320,9 @@ go run examples/query_dtsx.go SSIS_EXAMPLES/Expressions.dtsx
 
 # Comprehensive connection analysis with expressions and evaluated values
 go run examples/analyze_connections.go SSIS_EXAMPLES/Expressions.dtsx
+
+# Advanced package analysis with parser, validator, and analyzer
+go run examples/package_analysis.go SSIS_EXAMPLES/Expressions.dtsx
 
 # Advanced expression evaluation with all SSIS features
 go run examples/evaluate_expressions.go SSIS_EXAMPLES/Expressions.dtsx
@@ -309,7 +367,9 @@ The schema types are generated from official Microsoft SSIS XSD files and suppor
 
 ## Package Structure
 
-- `dtsx.go` - Main package API (Unmarshal/Marshal functions)
+- `dtsx.go` - Main package API, PackageParser, PrecedenceAnalyzer, PackageValidator
+- `expression.go` - Advanced SSIS expression evaluator with caching
+- `templates.go` - Reusable package templates
 - `dtsx/schemas/` - Generated Go types from XSD schemas
-- `examples/` - Example programs
+- `examples/` - Example programs including package_analysis.go
 - `SSIS_EXAMPLES/` - Sample DTSX files for testing

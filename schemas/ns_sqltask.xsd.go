@@ -2,6 +2,8 @@
 
 package schema
 
+
+
 // SqlTaskData ...
 type SqlTaskData *SqlTaskDataType
 
@@ -50,6 +52,8 @@ type SqlTaskParameterBindingType struct {
 	DataTypeAttr           *int    `xml:"DataType,attr"`
 	ParameterSizeAttr      *int    `xml:"ParameterSize,attr"`
 }
+
+
 
 // ParameterDirectionEnum ...
 type ParameterDirectionEnum string
@@ -115,8 +119,6 @@ type BackupDeviceTypeEnum int
 
 // BackupPhisycalDestinationTypeEnum ...
 type BackupPhisycalDestinationTypeEnum int
-
- 
 
 // BackupActionForExistingBackupsEnum ...
 type BackupActionForExistingBackupsEnum int
