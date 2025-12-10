@@ -24,7 +24,7 @@ func TestUnmarshalFromFile(t *testing.T) {
 	var dtsxFile string
 	for _, file := range files {
 		if !file.IsDir() && len(file.Name()) > 5 && file.Name()[len(file.Name())-5:] == ".dtsx" {
-			dtsxFile = "SSIS_EXAMPLES/" + file.Name()
+			dtsxFile = filepath.Join("SSIS_EXAMPLES", file.Name())
 			break
 		}
 	}
@@ -85,7 +85,7 @@ func TestIsDTSXPackage(t *testing.T) {
 	var dtsxFile string
 	for _, file := range files {
 		if !file.IsDir() && len(file.Name()) > 5 && file.Name()[len(file.Name())-5:] == ".dtsx" {
-			dtsxFile = "SSIS_EXAMPLES/" + file.Name()
+			dtsxFile = filepath.Join("SSIS_EXAMPLES", file.Name())
 			break
 		}
 	}
@@ -197,7 +197,7 @@ func TestGetConnections(t *testing.T) {
 	var dtsxFile string
 	for _, file := range files {
 		if !file.IsDir() && len(file.Name()) > 5 && file.Name()[len(file.Name())-5:] == ".dtsx" {
-			dtsxFile = "SSIS_EXAMPLES/" + file.Name()
+			dtsxFile = filepath.Join("SSIS_EXAMPLES", file.Name())
 			break
 		}
 	}
@@ -238,7 +238,7 @@ func TestGetVariables(t *testing.T) {
 	var dtsxFile string
 	for _, file := range files {
 		if !file.IsDir() && len(file.Name()) > 5 && file.Name()[len(file.Name())-5:] == ".dtsx" {
-			dtsxFile = "SSIS_EXAMPLES/" + file.Name()
+			dtsxFile = filepath.Join("SSIS_EXAMPLES", file.Name())
 			break
 		}
 	}
@@ -279,7 +279,7 @@ func TestGetVariableByName(t *testing.T) {
 	var dtsxFile string
 	for _, file := range files {
 		if !file.IsDir() && len(file.Name()) > 5 && file.Name()[len(file.Name())-5:] == ".dtsx" {
-			dtsxFile = "SSIS_EXAMPLES/" + file.Name()
+			dtsxFile = filepath.Join("SSIS_EXAMPLES", file.Name())
 			break
 		}
 	}
@@ -344,7 +344,7 @@ func TestQueryExecutables(t *testing.T) {
 	var dtsxFile string
 	for _, file := range files {
 		if !file.IsDir() && len(file.Name()) > 5 && file.Name()[len(file.Name())-5:] == ".dtsx" {
-			dtsxFile = "SSIS_EXAMPLES/" + file.Name()
+			dtsxFile = filepath.Join("SSIS_EXAMPLES", file.Name())
 			break
 		}
 	}
@@ -399,7 +399,7 @@ func TestGetExpressions(t *testing.T) {
 	var dtsxFile string
 	for _, file := range files {
 		if !file.IsDir() && len(file.Name()) > 5 && file.Name()[len(file.Name())-5:] == ".dtsx" {
-			dtsxFile = "SSIS_EXAMPLES/" + file.Name()
+			dtsxFile = filepath.Join("SSIS_EXAMPLES", file.Name())
 			break
 		}
 	}

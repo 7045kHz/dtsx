@@ -25,7 +25,7 @@ type ExecutableTypePackage struct {
 	Variables            *VariablesType                   `xml:"Variables"`
 	LoggingOptions       *LoggingOptionsType              `xml:"LoggingOptions"`
 	PropertyExpression   []*PropertyExpressionElementType `xml:"PropertyExpression"`
-	Executable           []*AnyNonPackageExecutableType   `xml:"Executable"`
+	Executable           []*AnyNonPackageExecutableType   `xml:"Executables>Executable"`
 	PrecedenceConstraint []*PrecedenceConstraintType      `xml:"PrecedenceConstraint"`
 	EventHandler         []*EventHandlerType              `xml:"EventHandler"`
 	PackageVariable      []*PackageVariableType           `xml:"PackageVariable"`
@@ -33,7 +33,9 @@ type ExecutableTypePackage struct {
 
 // AnyNonPackageExecutableType ...
 type AnyNonPackageExecutableType struct {
+	RefIdAttr              *string                          `xml:"refId,attr"`
 	ExecutableTypeAttr     string                           `xml:"ExecutableType,attr"`
+	ObjectNameAttr         *string                          `xml:"ObjectName,attr"`
 	ThreadHintAttr         *int                             `xml:"ThreadHint,attr"`
 	ForEachEnumerator      *ForEachEnumeratorType           `xml:"ForEachEnumerator"`
 	Property               []*Property                      `xml:"Property"`
@@ -652,6 +654,7 @@ type PipelineComponentPropertyType struct {
 	DTSPipelineComponentPropertyAttributeGroup *PipelineComponentPropertyAttributeGroup
 	NameAttr                                   *string                             `xml:"name,attr"`
 	ArrayElements                              *PipelineComponentArrayElementsType `xml:"arrayElements"`
+	Value                                      string                              `xml:",chardata"`
 }
 
 // PipelineComponentPropertyAttributeGroup ...
@@ -883,8 +886,8 @@ type PipelinePathType struct {
 	IdAttr          *string `xml:"id,attr"`
 	NameAttr        *string `xml:"name,attr"`
 	DescriptionAttr *string `xml:"description,attr"`
-	StartIdAttr     *int    `xml:"startId,attr"`
-	EndIdAttr       *int    `xml:"endId,attr"`
+	StartIdAttr     *string `xml:"startId,attr"`
+	EndIdAttr       *string `xml:"endId,attr"`
 }
 
 // LogProviderObjectDataType ...

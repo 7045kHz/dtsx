@@ -7,7 +7,10 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 
 	schema "github.com/7045kHz/dtsx/schemas"
@@ -19,10 +22,611 @@ type Package struct {
 	*schema.ExecutableTypePackage
 }
 
+// PackageParser provides centralized parsing and analysis functionality for DTSX packages
+type PackageParser struct {
+	pkg      *Package
+	vars     map[string]interface{}
+	connMap  map[string]*schema.ConnectionManagerType
+	execMap  map[string]*schema.AnyNonPackageExecutableType
+	varCache map[string]interface{} // Cache for expensive operations
+}
+
+// NewPackageParser creates a new PackageParser for the given package
+func NewPackageParser(pkg *Package) *PackageParser {
+	parser := &PackageParser{
+		pkg:      pkg,
+		varCache: make(map[string]interface{}),
+	}
+	parser.initialize()
+	return parser
+}
+
+// initialize builds internal maps and caches
+func (p *PackageParser) initialize() {
+	p.buildVariableMap()
+	p.buildConnectionMap()
+	p.buildExecutableMap()
+}
+
+// buildVariableMap creates a map of all variables with their values
+func (p *PackageParser) buildVariableMap() {
+	p.vars = make(map[string]interface{})
+	if p.pkg.Variables == nil || p.pkg.Variables.Variable == nil {
+		return
+	}
+	for _, v := range p.pkg.Variables.Variable {
+		if v.NamespaceAttr == nil || v.ObjectNameAttr == nil {
+			continue
+		}
+		fullName := *v.NamespaceAttr + "::" + *v.ObjectNameAttr
+		var value interface{}
+		if v.VariableValue != nil {
+			if num, err := strconv.ParseFloat(v.VariableValue.Value, 64); err == nil {
+				value = num
+			} else {
+				value = v.VariableValue.Value
+			}
+		} else {
+			// From properties
+			for _, prop := range v.Property {
+				if prop.NameAttr != nil && *prop.NameAttr == "Value" {
+					if num, err := strconv.ParseFloat(prop.Value, 64); err == nil {
+						value = num
+					} else {
+						value = prop.Value
+					}
+					break
+				}
+			}
+		}
+		if value != nil {
+			p.vars[fullName] = value
+		}
+	}
+}
+
+// buildConnectionMap creates a map of connection managers by refId and name
+func (p *PackageParser) buildConnectionMap() {
+	p.connMap = make(map[string]*schema.ConnectionManagerType)
+	if p.pkg.ConnectionManagers == nil || p.pkg.ConnectionManagers.ConnectionManager == nil {
+		return
+	}
+	for _, cm := range p.pkg.ConnectionManagers.ConnectionManager {
+		if cm.RefIdAttr != nil {
+			p.connMap[*cm.RefIdAttr] = cm
+		}
+		if cm.ObjectNameAttr != nil {
+			p.connMap[*cm.ObjectNameAttr] = cm
+		}
+	}
+}
+
+// buildExecutableMap creates a map of executables by refId
+func (p *PackageParser) buildExecutableMap() {
+	p.execMap = make(map[string]*schema.AnyNonPackageExecutableType)
+	if p.pkg.Executable == nil {
+		return
+	}
+	for _, exec := range p.pkg.Executable {
+		if exec.RefIdAttr != nil {
+			p.execMap[*exec.RefIdAttr] = exec
+		}
+	}
+}
+
+// GetVariableValue returns the value of a variable by name
+func (p *PackageParser) GetVariableValue(name string) (interface{}, error) {
+	if value, exists := p.vars[name]; exists {
+		return value, nil
+	}
+	return nil, fmt.Errorf("variable %s not found", name)
+}
+
+// GetConnectionManager returns a connection manager by refId or name
+func (p *PackageParser) GetConnectionManager(id string) (*schema.ConnectionManagerType, error) {
+	if cm, exists := p.connMap[id]; exists {
+		return cm, nil
+	}
+	return nil, fmt.Errorf("connection manager %s not found", id)
+}
+
+// GetExecutable returns an executable by refId
+func (p *PackageParser) GetExecutable(refId string) (*schema.AnyNonPackageExecutableType, error) {
+	if exec, exists := p.execMap[refId]; exists {
+		return exec, nil
+	}
+	return nil, fmt.Errorf("executable %s not found", refId)
+}
+
+// EvaluateExpression evaluates an expression with caching
+func (p *PackageParser) EvaluateExpression(expr string) (interface{}, error) {
+	if expr == "" {
+		return nil, fmt.Errorf("empty expression")
+	}
+
+	// Check cache first
+	if cached, exists := p.varCache["expr:"+expr]; exists {
+		return cached, nil
+	}
+
+	// Evaluate using the package's EvaluateExpression
+	result, err := EvaluateExpression(expr, p.pkg)
+	if err != nil {
+		return nil, err
+	}
+
+	// Cache the result
+	p.varCache["expr:"+expr] = result
+	return result, nil
+}
+
+// GetSQLStatements extracts SQL statements from all executables
+func (p *PackageParser) GetSQLStatements() []*SQLStatement {
+	var statements []*SQLStatement
+	if p.pkg.Executable == nil {
+		return statements
+	}
+
+	for _, exec := range p.pkg.Executable {
+		taskName := "Unknown"
+		if exec.ObjectNameAttr != nil {
+			taskName = *exec.ObjectNameAttr
+		}
+
+		// Extract from properties (control flow tasks)
+		if exec.Property != nil {
+			for _, prop := range exec.Property {
+				if prop.NameAttr != nil && *prop.NameAttr == "SqlStatementSource" &&
+					prop.PropertyElementBaseType != nil && prop.PropertyElementBaseType.AnySimpleType != nil {
+					statements = append(statements, &SQLStatement{
+						TaskName:    taskName,
+						TaskType:    "Control Flow",
+						SQL:         prop.PropertyElementBaseType.AnySimpleType.Value,
+						RefId:       getRefId(exec),
+						Connections: p.getConnectionsForExecutable(exec),
+					})
+				}
+			}
+		}
+
+		// Extract from dataflow components
+		if exec.ExecutableTypeAttr == "Microsoft.Pipeline" && exec.ObjectData != nil {
+			p.extractDataflowSQL(exec, &statements)
+		}
+	}
+
+	return statements
+}
+
+// SQLStatement represents a SQL statement found in the package
+type SQLStatement struct {
+	TaskName    string
+	TaskType    string
+	SQL         string
+	RefId       string
+	Connections []string
+}
+
+// getRefId safely gets the refId from an executable
+func getRefId(exec *schema.AnyNonPackageExecutableType) string {
+	if exec.RefIdAttr != nil {
+		return *exec.RefIdAttr
+	}
+	return ""
+}
+
+// getConnectionsForExecutable finds connection managers used by an executable
+func (p *PackageParser) getConnectionsForExecutable(exec *schema.AnyNonPackageExecutableType) []string {
+	var connections []string
+
+	// Check property expressions for connection references
+	if exec.PropertyExpression != nil {
+		for _, expr := range exec.PropertyExpression {
+			if expr.AnySimpleType != nil {
+				conns := p.extractConnectionRefs(expr.AnySimpleType.Value)
+				connections = append(connections, conns...)
+			}
+		}
+	}
+
+	// For dataflows, check component connections
+	if exec.ExecutableTypeAttr == "Microsoft.Pipeline" && exec.ObjectData != nil {
+		if exec.ObjectData.Pipeline != nil && exec.ObjectData.Pipeline.Components != nil {
+			for _, comp := range exec.ObjectData.Pipeline.Components.Component {
+				if comp.Connections != nil {
+					for _, conn := range comp.Connections.Connection {
+						if conn.ConnectionManagerIDAttr != nil {
+							if cm, exists := p.connMap[*conn.ConnectionManagerIDAttr]; exists {
+								if cm.ObjectNameAttr != nil {
+									connections = append(connections, *cm.ObjectNameAttr)
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return connections
+}
+
+// extractConnectionRefs finds connection manager references in expressions
+func (p *PackageParser) extractConnectionRefs(expr string) []string {
+	var connections []string
+	// Look for patterns like @[ConnectionManager::Name]
+	re := regexp.MustCompile(`@\[ConnectionManager::([^\]]+)\]`)
+	matches := re.FindAllStringSubmatch(expr, -1)
+	for _, match := range matches {
+		if len(match) > 1 {
+			connections = append(connections, match[1])
+		}
+	}
+	return connections
+}
+
+// extractDataflowSQL extracts SQL from dataflow components
+func (p *PackageParser) extractDataflowSQL(exec *schema.AnyNonPackageExecutableType, statements *[]*SQLStatement) {
+	taskName := "Unknown"
+	if exec.ObjectNameAttr != nil {
+		taskName = *exec.ObjectNameAttr
+	}
+
+	if exec.ObjectData.Pipeline == nil || exec.ObjectData.Pipeline.Components == nil {
+		return
+	}
+
+	for _, comp := range exec.ObjectData.Pipeline.Components.Component {
+		var sql string
+		if comp.Properties != nil {
+			for _, prop := range comp.Properties.Property {
+				if prop.NameAttr == nil {
+					continue
+				}
+				propName := *prop.NameAttr
+				if propName == "SqlCommand" || propName == "SqlStatement" || propName == "CommandText" ||
+					propName == "Query" || propName == "SelectQuery" || propName == "InsertQuery" ||
+					propName == "UpdateQuery" || propName == "DeleteQuery" || propName == "OpenRowset" {
+					sql = strings.TrimSpace(prop.Value)
+					if propName == "OpenRowset" && sql != "" {
+						sql = "SELECT * FROM " + sql
+					}
+					break
+				}
+			}
+		}
+
+		if sql != "" {
+			connections := p.getConnectionsForComponent(comp)
+			*statements = append(*statements, &SQLStatement{
+				TaskName:    taskName,
+				TaskType:    "Dataflow",
+				SQL:         sql,
+				RefId:       getRefId(exec),
+				Connections: connections,
+			})
+		}
+	}
+}
+
+// getConnectionsForComponent finds connections used by a component
+func (p *PackageParser) getConnectionsForComponent(comp *schema.PipelineComponentType) []string {
+	var connections []string
+	if comp.Connections != nil {
+		for _, conn := range comp.Connections.Connection {
+			if conn.ConnectionManagerIDAttr != nil {
+				if cm, exists := p.connMap[*conn.ConnectionManagerIDAttr]; exists {
+					if cm.ObjectNameAttr != nil {
+						connections = append(connections, *cm.ObjectNameAttr)
+					}
+				}
+			}
+		}
+	}
+	return connections
+}
+
+// PrecedenceAnalyzer handles execution order calculation with support for complex precedence constraints
+type PrecedenceAnalyzer struct {
+	pkg          *Package
+	execMap      map[string]*schema.AnyNonPackageExecutableType
+	orderCache   map[string]int
+	dependencies map[string][]string
+}
+
+// NewPrecedenceAnalyzer creates a new analyzer for the given package
+func NewPrecedenceAnalyzer(pkg *Package) *PrecedenceAnalyzer {
+	analyzer := &PrecedenceAnalyzer{
+		pkg:          pkg,
+		execMap:      make(map[string]*schema.AnyNonPackageExecutableType),
+		orderCache:   make(map[string]int),
+		dependencies: make(map[string][]string),
+	}
+	analyzer.buildExecutableMap()
+	analyzer.buildDependencies()
+	return analyzer
+}
+
+// buildExecutableMap creates a map of executables by refId
+func (p *PrecedenceAnalyzer) buildExecutableMap() {
+	if p.pkg.Executable == nil {
+		return
+	}
+	for _, exec := range p.pkg.Executable {
+		if exec.RefIdAttr != nil {
+			p.execMap[*exec.RefIdAttr] = exec
+		}
+	}
+}
+
+// buildDependencies analyzes precedence constraints to build dependency graph
+func (p *PrecedenceAnalyzer) buildDependencies() {
+	if p.pkg.Executable == nil {
+		return
+	}
+
+	// Build dependency graph from precedence constraints
+	for _, exec := range p.pkg.Executable {
+		if exec.RefIdAttr == nil {
+			continue
+		}
+		refId := *exec.RefIdAttr
+
+		if exec.PrecedenceConstraint != nil {
+			for _, pc := range exec.PrecedenceConstraint {
+				if pc.Executable != nil {
+					for _, pcExec := range pc.Executable {
+						if pcExec.IDREFAttr != nil {
+							// This executable depends on the referenced executable
+							p.dependencies[refId] = append(p.dependencies[refId], *pcExec.IDREFAttr)
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+// GetExecutionOrder returns the execution order for an executable
+func (p *PrecedenceAnalyzer) GetExecutionOrder(refId string) (int, error) {
+	if order, exists := p.orderCache[refId]; exists {
+		return order, nil
+	}
+
+	// If no dependencies, assign sequential order
+	if len(p.dependencies[refId]) == 0 {
+		order := len(p.orderCache) + 1
+		p.orderCache[refId] = order
+		return order, nil
+	}
+
+	// Find maximum order among dependencies
+	maxDepOrder := 0
+	for _, depId := range p.dependencies[refId] {
+		depOrder, err := p.GetExecutionOrder(depId)
+		if err != nil {
+			return 0, err
+		}
+		if depOrder > maxDepOrder {
+			maxDepOrder = depOrder
+		}
+	}
+
+	order := maxDepOrder + 1
+	p.orderCache[refId] = order
+	return order, nil
+}
+
+// GetAllExecutionOrders returns execution orders for all executables
+func (p *PrecedenceAnalyzer) GetAllExecutionOrders() (map[string]int, error) {
+	orders := make(map[string]int)
+	for refId := range p.execMap {
+		order, err := p.GetExecutionOrder(refId)
+		if err != nil {
+			return nil, err
+		}
+		orders[refId] = order
+	}
+	return orders, nil
+}
+
+// GetExecutableChain returns the execution chain for an executable (all predecessors)
+func (p *PrecedenceAnalyzer) GetExecutableChain(refId string) ([]string, error) {
+	var chain []string
+	visited := make(map[string]bool)
+
+	var buildChain func(string) error
+	buildChain = func(id string) error {
+		if visited[id] {
+			return fmt.Errorf("circular dependency detected at %s", id)
+		}
+		visited[id] = true
+
+		for _, depId := range p.dependencies[id] {
+			if err := buildChain(depId); err != nil {
+				return err
+			}
+		}
+
+		chain = append(chain, id)
+		return nil
+	}
+
+	if err := buildChain(refId); err != nil {
+		return nil, err
+	}
+
+	return chain, nil
+}
+
+// ValidateConstraints checks for constraint violations and circular dependencies
+func (p *PrecedenceAnalyzer) ValidateConstraints() []error {
+	var errors []error
+
+	// Check for circular dependencies
+	for refId := range p.execMap {
+		if _, err := p.GetExecutableChain(refId); err != nil {
+			errors = append(errors, fmt.Errorf("constraint validation failed for %s: %v", refId, err))
+		}
+	}
+
+	return errors
+}
+
+// PackageValidator provides validation functions for DTSX packages
+type PackageValidator struct {
+	pkg      *Package
+	parser   *PackageParser
+	analyzer *PrecedenceAnalyzer
+}
+
+// NewPackageValidator creates a new validator for the package
+func NewPackageValidator(pkg *Package) *PackageValidator {
+	return &PackageValidator{
+		pkg:      pkg,
+		parser:   NewPackageParser(pkg),
+		analyzer: NewPrecedenceAnalyzer(pkg),
+	}
+}
+
+// Validate performs comprehensive validation of the package
+func (v *PackageValidator) Validate() []*ValidationError {
+	var errors []*ValidationError
+
+	// Validate precedence constraints
+	if constraintErrors := v.analyzer.ValidateConstraints(); len(constraintErrors) > 0 {
+		for _, err := range constraintErrors {
+			errors = append(errors, &ValidationError{
+				Severity: "error",
+				Message:  err.Error(),
+				Path:     "PrecedenceConstraints",
+			})
+		}
+	}
+
+	// Validate connections
+	if connErrors := v.validateConnections(); len(connErrors) > 0 {
+		errors = append(errors, connErrors...)
+	}
+
+	// Validate expressions
+	if exprErrors := v.validateExpressions(); len(exprErrors) > 0 {
+		errors = append(errors, exprErrors...)
+	}
+
+	return errors
+}
+
+// validateConnections checks connection managers for issues
+func (v *PackageValidator) validateConnections() []*ValidationError {
+	var errors []*ValidationError
+
+	connections := v.pkg.GetConnections()
+	if connections.Count == 0 {
+		return errors
+	}
+
+	connMgrs := connections.Results.([]*schema.ConnectionManagerType)
+	for _, cm := range connMgrs {
+		name := "Unknown"
+		if cm.ObjectNameAttr != nil {
+			name = *cm.ObjectNameAttr
+		}
+
+		// Check for missing required properties
+		if len(cm.Property) == 0 {
+			errors = append(errors, &ValidationError{
+				Severity: "warning",
+				Message:  "Connection manager has no properties defined",
+				Path:     "ConnectionManagers." + name,
+			})
+		}
+
+		// Check for expressions that might fail
+		if cm.PropertyExpression != nil {
+			for _, expr := range cm.PropertyExpression {
+				if expr.AnySimpleType != nil {
+					_, err := v.parser.EvaluateExpression(expr.AnySimpleType.Value)
+					if err != nil {
+						errors = append(errors, &ValidationError{
+							Severity: "error",
+							Message:  fmt.Sprintf("Expression evaluation failed: %v", err),
+							Path:     "ConnectionManagers." + name,
+						})
+					}
+				}
+			}
+		}
+	}
+
+	return errors
+}
+
+// validateExpressions checks all expressions in the package
+func (v *PackageValidator) validateExpressions() []*ValidationError {
+	var errors []*ValidationError
+
+	expressions := v.pkg.GetExpressions()
+	if expressions.Count == 0 {
+		return errors
+	}
+
+	exprInfos := expressions.Results.([]*ExpressionInfo)
+	for _, expr := range exprInfos {
+		_, err := v.parser.EvaluateExpression(expr.Expression)
+		if err != nil {
+			errors = append(errors, &ValidationError{
+				Severity: "error",
+				Message:  fmt.Sprintf("Expression evaluation failed: %v", err),
+				Path:     expr.Location + "." + expr.Context,
+			})
+		}
+	}
+
+	return errors
+}
+
 // QueryResult wraps query results with metadata
 type QueryResult struct {
 	Count   int
 	Results interface{}
+}
+
+// GetStructFields returns a map of field names to their types for any struct
+func GetStructFields(s interface{}) map[string]string {
+	t := reflect.TypeOf(s)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	if t.Kind() != reflect.Struct {
+		return nil
+	}
+	fields := make(map[string]string)
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		fields[field.Name] = field.Type.String()
+	}
+	return fields
+}
+
+// GetProperty returns the value of the specified property by name for any struct
+func GetProperty(s interface{}, name string) interface{} {
+	t := reflect.TypeOf(s)
+	v := reflect.ValueOf(s)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+		v = v.Elem()
+	}
+	if t.Kind() != reflect.Struct {
+		return nil
+	}
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		if field.Name == name {
+			return v.Field(i).Interface()
+		}
+	}
+	return nil
 }
 
 // GetConnections returns all connection managers in the package
@@ -255,6 +859,13 @@ func UnmarshalFromReader(r io.Reader) (*Package, error) {
 
 // UnmarshalFromFile reads a DTSX file and returns a Package
 func UnmarshalFromFile(filename string) (*Package, error) {
+	filename = filepath.Clean(filename)
+	absPath, err := filepath.Abs(filename)
+	if err != nil {
+		return nil, err
+	}
+	filename = absPath
+
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
