@@ -493,6 +493,17 @@ func NewPackageValidator(pkg *Package) *PackageValidator {
 func (v *PackageValidator) Validate() []*ValidationError {
 	var errors []*ValidationError
 
+	// Validate variables
+	if varErrors := v.pkg.validateVariables(); len(varErrors) > 0 {
+		for _, err := range varErrors {
+			errors = append(errors, &ValidationError{
+				Severity: err.Severity,
+				Message:  err.Message,
+				Path:     err.Path,
+			})
+		}
+	}
+
 	// Validate precedence constraints
 	if constraintErrors := v.analyzer.ValidateConstraints(); len(constraintErrors) > 0 {
 		for _, err := range constraintErrors {
@@ -521,41 +532,45 @@ func (v *PackageValidator) Validate() []*ValidationError {
 func (v *PackageValidator) validateConnections() []*ValidationError {
 	var errors []*ValidationError
 
-	connections := v.pkg.GetConnections()
-	if connections.Count == 0 {
+	if v.pkg.ConnectionManagers == nil || v.pkg.ConnectionManagers.ConnectionManager == nil {
 		return errors
 	}
 
-	connMgrs := connections.Results.([]*schema.ConnectionManagerType)
-	for _, cm := range connMgrs {
-		name := "Unknown"
-		if cm.ObjectNameAttr != nil {
-			name = *cm.ObjectNameAttr
-		}
-
-		// Check for missing required properties
-		if len(cm.Property) == 0 {
+	// Check for duplicate connection names
+	nameMap := make(map[string]bool)
+	for _, cm := range v.pkg.ConnectionManagers.ConnectionManager {
+		if cm.ObjectNameAttr == nil {
 			errors = append(errors, &ValidationError{
-				Severity: "warning",
-				Message:  "Connection manager has no properties defined",
+				Severity: "error",
+				Message:  "Connection manager missing name",
+				Path:     "ConnectionManagers",
+			})
+			continue
+		}
+		name := *cm.ObjectNameAttr
+		if nameMap[name] {
+			errors = append(errors, &ValidationError{
+				Severity: "error",
+				Message:  "Duplicate connection manager name: " + name,
 				Path:     "ConnectionManagers." + name,
 			})
 		}
+		nameMap[name] = true
 
-		// Check for expressions that might fail
-		if cm.PropertyExpression != nil {
-			for _, expr := range cm.PropertyExpression {
-				if expr.AnySimpleType != nil {
-					_, err := v.parser.EvaluateExpression(expr.AnySimpleType.Value)
-					if err != nil {
-						errors = append(errors, &ValidationError{
-							Severity: "error",
-							Message:  fmt.Sprintf("Expression evaluation failed: %v", err),
-							Path:     "ConnectionManagers." + name,
-						})
-					}
-				}
+		// Check for connection string
+		hasConnStr := false
+		for _, prop := range cm.Property {
+			if prop.NameAttr != nil && *prop.NameAttr == "ConnectionString" && prop.Value != "" {
+				hasConnStr = true
+				break
 			}
+		}
+		if !hasConnStr {
+			errors = append(errors, &ValidationError{
+				Severity: "warning",
+				Message:  "Connection manager has no connection string",
+				Path:     "ConnectionManagers." + name,
+			})
 		}
 	}
 

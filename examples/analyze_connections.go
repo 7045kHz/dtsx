@@ -214,8 +214,13 @@ func main() {
 		}
 	}
 
-	// Calculate execution order
-	executionOrder := calculateExecutionOrder(pkg)
+	// Calculate execution order using PrecedenceAnalyzer
+	analyzer := dtsx.NewPrecedenceAnalyzer(pkg)
+	executionOrder, err := analyzer.GetAllExecutionOrders()
+	if err != nil {
+		fmt.Printf("Warning: Could not calculate execution order: %v\n", err)
+		executionOrder = make(map[string]int)
+	}
 
 	// Use parser to get SQL statements
 	sqlStatements := parser.GetSQLStatements()
@@ -467,23 +472,6 @@ func evaluateExpressionAdvanced(expression string, pkg *dtsx.Package) string {
 	default:
 		return fmt.Sprintf("%v", v)
 	}
-}
-
-func calculateExecutionOrder(pkg *dtsx.Package) map[string]int {
-	order := make(map[string]int)
-	if pkg.Executable == nil {
-		return order
-	}
-
-	// For simplicity, assign sequential order based on appearance in XML
-	// In a real implementation, this would use precedence constraints for topological sort
-	for i, exec := range pkg.Executable {
-		if exec.RefIdAttr != nil {
-			order[*exec.RefIdAttr] = i + 1
-		}
-	}
-
-	return order
 }
 
 func extractDataflowComponents(objectData *schema.ExecutableObjectDataType, connMap map[string]*ConnectionAnalysis) []ComponentInfo {

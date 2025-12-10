@@ -60,8 +60,9 @@ func main() {
 
 	fmt.Println("\n=== Comprehensive Package Validation ===")
 
-	// Run comprehensive validation
-	errors := pkg.Validate()
+	// Run comprehensive validation using PackageValidator
+	validator := dtsx.NewPackageValidator(pkg)
+	errors := validator.Validate()
 
 	if len(errors) == 0 {
 		fmt.Println("✓ No validation issues found!")

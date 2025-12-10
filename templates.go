@@ -32,6 +32,24 @@ func (pt *PackageTemplate) Instantiate(params map[string]interface{}) (*Package,
 		ExecutableTypePackage: &schema.ExecutableTypePackage{},
 	}
 
+	// Copy variables
+	if pt.BasePackage.Variables != nil {
+		pkg.Variables = &schema.VariablesType{}
+		if pt.BasePackage.Variables.Variable != nil {
+			pkg.Variables.Variable = make([]*schema.VariableType, len(pt.BasePackage.Variables.Variable))
+			copy(pkg.Variables.Variable, pt.BasePackage.Variables.Variable)
+		}
+	}
+
+	// Copy connection managers
+	if pt.BasePackage.ConnectionManagers != nil {
+		pkg.ConnectionManagers = &schema.ConnectionManagersType{}
+		if pt.BasePackage.ConnectionManagers.ConnectionManager != nil {
+			pkg.ConnectionManagers.ConnectionManager = make([]*schema.ConnectionManagerType, len(pt.BasePackage.ConnectionManagers.ConnectionManager))
+			copy(pkg.ConnectionManagers.ConnectionManager, pt.BasePackage.ConnectionManagers.ConnectionManager)
+		}
+	}
+
 	// Copy basic properties
 	if pt.BasePackage.Property != nil {
 		pkg.Property = make([]*schema.Property, len(pt.BasePackage.Property))
