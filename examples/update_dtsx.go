@@ -32,9 +32,9 @@ func main() {
 	fmt.Printf("\n=== Current Variables ===\n")
 	if pkg.Variables != nil && pkg.Variables.Variable != nil {
 		for _, v := range pkg.Variables.Variable {
-			if v.NamespaceAttr != nil && v.ObjectNameAttr != nil && v.VariableValue != nil {
-				fmt.Printf("  %s::%s = %s\n", *v.NamespaceAttr, *v.ObjectNameAttr, v.VariableValue.Value)
-			}
+			varName := dtsx.GetVariableName(v)
+			varValue := dtsx.GetVariableValue(v)
+			fmt.Printf("  %s = %s\n", varName, varValue)
 		}
 	}
 
@@ -43,21 +43,8 @@ func main() {
 	if pkg.ConnectionManagers != nil && pkg.ConnectionManagers.ConnectionManager != nil {
 		fmt.Printf("Found %d connection managers\n", len(pkg.ConnectionManagers.ConnectionManager))
 		for _, cm := range pkg.ConnectionManagers.ConnectionManager {
-			// Find the connection name from properties
-			var connName string
-			var connString string
-			for _, prop := range cm.Property {
-				if prop.NameAttr != nil {
-					if *prop.NameAttr == "ObjectName" && prop.PropertyElementBaseType != nil &&
-						prop.PropertyElementBaseType.AnySimpleType != nil {
-						connName = prop.PropertyElementBaseType.AnySimpleType.Value
-					}
-					if *prop.NameAttr == "ConnectionString" && prop.PropertyElementBaseType != nil &&
-						prop.PropertyElementBaseType.AnySimpleType != nil {
-						connString = prop.PropertyElementBaseType.AnySimpleType.Value
-					}
-				}
-			}
+			connName := dtsx.GetConnectionName(cm)
+			connString := dtsx.GetConnectionString(cm)
 			if connName != "" {
 				fmt.Printf("  %s", connName)
 				if connString != "" {

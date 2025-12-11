@@ -2,6 +2,8 @@
 package dtsx
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -10,15 +12,43 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
 	schema "github.com/7045kHz/dtsx/schemas"
 )
 
+// generateGUID creates a simple GUID-like string for DTSID
+func generateGUID() string {
+	bytes := make([]byte, 16)
+	rand.Read(bytes)
+	return fmt.Sprintf("{%s-%s-%s-%s-%s}",
+		hex.EncodeToString(bytes[0:4]),
+		hex.EncodeToString(bytes[4:6]),
+		hex.EncodeToString(bytes[6:8]),
+		hex.EncodeToString(bytes[8:10]),
+		hex.EncodeToString(bytes[10:16]))
+}
+
 // Package represents a DTSX package structure
 type Package struct {
-	XMLName xml.Name `xml:"www.microsoft.com/SqlServer/Dts Executable"`
+	XMLName                        xml.Name `xml:"Executable"`
+	RefIdAttr                      *string  `xml:"refId,attr"`
+	CreationDateAttr               *string  `xml:"CreationDate,attr"`
+	CreationNameAttr               *string  `xml:"CreationName,attr"`
+	CreatorComputerNameAttr        *string  `xml:"CreatorComputerName,attr"`
+	CreatorNameAttr                *string  `xml:"CreatorName,attr"`
+	DescriptionAttr                *string  `xml:"Description,attr"`
+	DTSIDAttr                      *string  `xml:"DTSID,attr"`
+	EnableConfigAttr               *string  `xml:"EnableConfig,attr"`
+	ExecutableTypeAttr             *string  `xml:"ExecutableType,attr"`
+	LastModifiedProductVersionAttr *string  `xml:"LastModifiedProductVersion,attr"`
+	LocaleIDAttr                   *string  `xml:"LocaleID,attr"`
+	ObjectNameAttr                 *string  `xml:"ObjectName,attr"`
+	PackageTypeAttr                *string  `xml:"PackageType,attr"`
+	VersionBuildAttr               *string  `xml:"VersionBuild,attr"`
+	VersionGUIDAttr                *string  `xml:"VersionGUID,attr"`
 	*schema.ExecutableTypePackage
 }
 
@@ -187,6 +217,11 @@ func (p *PackageParser) GetSQLStatements() []*SQLStatement {
 					})
 				}
 			}
+		}
+
+		// Extract from task-specific ObjectData
+		if exec.ObjectData != nil {
+			p.extractTaskSpecificSQL(exec, &statements)
 		}
 
 		// Extract from dataflow components
@@ -473,6 +508,51 @@ func (p *PrecedenceAnalyzer) ValidateConstraints() []error {
 	return errors
 }
 
+// GetExecutionFlowDescription returns a textual description of the execution flow
+func (p *PrecedenceAnalyzer) GetExecutionFlowDescription() string {
+	if p.pkg == nil || len(p.pkg.Executable) == 0 {
+		return "No executables found in package."
+	}
+
+	var flow strings.Builder
+	flow.WriteString("Execution Flow Description:\n")
+
+	orders, err := p.GetAllExecutionOrders()
+	if err != nil {
+		return fmt.Sprintf("Error calculating execution order: %v", err)
+	}
+
+	// Sort by order
+	type execInfo struct {
+		order int
+		name  string
+		typ   string
+	}
+	var execs []execInfo
+	for refId, order := range orders {
+		if exec, exists := p.execMap[refId]; exists {
+			name := GetExecutableName(exec)
+			typ := exec.ExecutableTypeAttr
+			execs = append(execs, execInfo{order, name, typ})
+		}
+	}
+
+	// Sort by order
+	sort.Slice(execs, func(i, j int) bool {
+		return execs[i].order < execs[j].order
+	})
+
+	for _, exec := range execs {
+		flow.WriteString(fmt.Sprintf("Task %d: %s", exec.order, exec.name))
+		if exec.typ != "" {
+			flow.WriteString(fmt.Sprintf(" (%s)", exec.typ))
+		}
+		flow.WriteString("\n")
+	}
+
+	return flow.String()
+}
+
 // PackageValidator provides validation functions for DTSX packages
 type PackageValidator struct {
 	pkg      *Package
@@ -607,21 +687,153 @@ type QueryResult struct {
 	Results interface{}
 }
 
-// GetStructFields returns a map of field names to their types for any struct
-func GetStructFields(s interface{}) map[string]string {
-	t := reflect.TypeOf(s)
-	if t.Kind() == reflect.Ptr {
-		t = t.Elem()
+// GetConnectionString returns the connection string of a connection manager
+func GetConnectionString(cm *schema.ConnectionManagerType) string {
+	if cm == nil {
+		return ""
 	}
-	if t.Kind() != reflect.Struct {
+	for _, prop := range cm.Property {
+		if prop.NameAttr != nil && *prop.NameAttr == "ConnectionString" &&
+			prop.PropertyElementBaseType != nil && prop.PropertyElementBaseType.AnySimpleType != nil {
+			return prop.PropertyElementBaseType.AnySimpleType.Value
+		}
+	}
+	return ""
+}
+
+// GetVariableValue returns the value of a variable
+func GetVariableValue(v *schema.VariableType) string {
+	if v == nil {
+		return ""
+	}
+	if v.VariableValue != nil && v.VariableValue.Value != "" {
+		return v.VariableValue.Value
+	}
+	// Fallback to property
+	for _, prop := range v.Property {
+		if prop.NameAttr != nil && *prop.NameAttr == "Value" && prop.Value != "" {
+			return prop.Value
+		}
+	}
+	return ""
+}
+
+// GetConnectionName returns the name of a connection manager
+func GetConnectionName(cm *schema.ConnectionManagerType) string {
+	if cm == nil {
+		return "unnamed"
+	}
+	if cm.ObjectNameAttr != nil {
+		return *cm.ObjectNameAttr
+	}
+	// Fallback to property
+	for _, prop := range cm.Property {
+		if prop.NameAttr != nil && *prop.NameAttr == "ObjectName" &&
+			prop.PropertyElementBaseType != nil && prop.PropertyElementBaseType.AnySimpleType != nil {
+			return prop.PropertyElementBaseType.AnySimpleType.Value
+		}
+	}
+	return "unnamed"
+}
+
+// GetVariableName returns the full name (namespace::name) of a variable
+func GetVariableName(v *schema.VariableType) string {
+	if v == nil {
+		return "unnamed"
+	}
+	namespace := "User"
+	if v.NamespaceAttr != nil {
+		namespace = *v.NamespaceAttr
+	}
+	name := "unnamed"
+	if v.ObjectNameAttr != nil {
+		name = *v.ObjectNameAttr
+	}
+	return namespace + "::" + name
+}
+
+// GetExecutableName returns the name of an executable
+func GetExecutableName(exec *schema.AnyNonPackageExecutableType) string {
+	if exec == nil {
+		return "unnamed"
+	}
+	if exec.ObjectNameAttr != nil {
+		return *exec.ObjectNameAttr
+	}
+	// Fallback to property
+	for _, prop := range exec.Property {
+		if prop.NameAttr != nil && *prop.NameAttr == "ObjectName" &&
+			prop.PropertyElementBaseType != nil && prop.PropertyElementBaseType.AnySimpleType != nil {
+			return prop.PropertyElementBaseType.AnySimpleType.Value
+		}
+	}
+	return "unnamed"
+}
+
+// GetExpressionDetails returns detailed information about an expression including evaluation result and dependencies
+func GetExpressionDetails(exprInfo *ExpressionInfo, pkg *Package) *ExpressionDetails {
+	if exprInfo == nil {
 		return nil
 	}
-	fields := make(map[string]string)
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
-		fields[field.Name] = field.Type.String()
+
+	details := &ExpressionDetails{
+		Expression: exprInfo.Expression,
+		Location:   exprInfo.Location,
+		Name:       exprInfo.Name,
+		Context:    exprInfo.Context,
 	}
-	return fields
+
+	// Try to evaluate the expression
+	if pkg != nil {
+		parser := NewPackageParser(pkg)
+		if result, err := parser.EvaluateExpression(exprInfo.Expression); err == nil {
+			details.EvaluatedValue = fmt.Sprintf("%v", result)
+		} else {
+			details.EvaluationError = err.Error()
+		}
+
+		// Extract dependencies (variables, parameters, etc.)
+		details.Dependencies = extractExpressionDependencies(exprInfo.Expression, pkg)
+	}
+
+	return details
+}
+
+// ExpressionDetails provides comprehensive information about an expression
+type ExpressionDetails struct {
+	Expression      string
+	Location        string
+	Name            string
+	Context         string
+	EvaluatedValue  string
+	EvaluationError string
+	Dependencies    []string
+}
+
+// extractExpressionDependencies extracts variable and parameter references from an expression
+func extractExpressionDependencies(expr string, pkg *Package) []string {
+	var deps []string
+
+	// Simple regex patterns for common SSIS expression syntax
+	// Variables: @[User::VarName] or @[System::VarName]
+	varRegex := regexp.MustCompile(`@\[([^]]+)\]`)
+	matches := varRegex.FindAllStringSubmatch(expr, -1)
+	for _, match := range matches {
+		if len(match) > 1 {
+			deps = append(deps, match[1])
+		}
+	}
+
+	// Parameters: $Project::ParamName or $Package::ParamName
+	paramRegex := regexp.MustCompile(`\$([^:]+)::([^\s\)]+)`)
+	paramMatches := paramRegex.FindAllStringSubmatch(expr, -1)
+	for _, match := range paramMatches {
+		if len(match) > 2 {
+			deps = append(deps, match[1]+"::"+match[2])
+		}
+	}
+
+	return deps
 }
 
 // GetProperty returns the value of the specified property by name for any struct
@@ -855,6 +1067,17 @@ func (p *Package) GetExpressions() *QueryResult {
 
 // Unmarshal parses DTSX XML data and returns a Package
 func Unmarshal(data []byte) (*Package, error) {
+	// Preprocess XML to ensure DTS namespace compatibility
+	xmlStr := string(data)
+
+	// Remove DTS prefixes to match the schema structs
+	xmlStr = strings.ReplaceAll(xmlStr, `<DTS:`, `<`)
+	xmlStr = strings.ReplaceAll(xmlStr, `</DTS:`, `</`)
+	xmlStr = strings.ReplaceAll(xmlStr, ` DTS:`, ` `)
+	xmlStr = strings.ReplaceAll(xmlStr, `xmlns:DTS="www.microsoft.com/SqlServer/Dts"`, ``)
+
+	data = []byte(xmlStr)
+
 	var pkg Package
 	err := xml.Unmarshal(data, &pkg)
 	if err != nil {
@@ -892,7 +1115,51 @@ func UnmarshalFromFile(filename string) (*Package, error) {
 
 // Marshal converts a Package to DTSX XML format
 func Marshal(pkg *Package) ([]byte, error) {
-	return xml.MarshalIndent(pkg, "", "  ")
+	data, err := xml.MarshalIndent(pkg, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	// Add XML declaration and fix namespace
+	xmlStr := string(data)
+	// Replace the root Executable element with DTS prefix
+	xmlStr = strings.Replace(xmlStr, `<Executable `, `<DTS:Executable `, 1)
+
+	// Add DTS prefix to all attributes except those in xmlns
+	xmlStr = regexp.MustCompile(`(\w+)="([^"]*)"`).ReplaceAllStringFunc(xmlStr, func(match string) string {
+		// Skip if this is part of xmlns declaration
+		if strings.Contains(match, `xmlns`) || strings.HasPrefix(match, `DTS:`) {
+			return match
+		}
+		parts := strings.SplitN(match, `="`, 2)
+		if len(parts) == 2 {
+			return `DTS:` + parts[0] + `="` + parts[1]
+		}
+		return match
+	})
+
+	// Add xmlns declaration to the root element
+	xmlStr = strings.Replace(xmlStr, `<DTS:Executable `, `<DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts" `, 1)
+
+	// Add DTS prefix to all inner elements
+	xmlStr = regexp.MustCompile(`<Property`).ReplaceAllString(xmlStr, `<DTS:Property`)
+	xmlStr = regexp.MustCompile(`</Property>`).ReplaceAllString(xmlStr, `</DTS:Property>`)
+	xmlStr = regexp.MustCompile(`<ConnectionManagers`).ReplaceAllString(xmlStr, `<DTS:ConnectionManagers`)
+	xmlStr = regexp.MustCompile(`</ConnectionManagers>`).ReplaceAllString(xmlStr, `</DTS:ConnectionManagers>`)
+	xmlStr = regexp.MustCompile(`<ConnectionManager`).ReplaceAllString(xmlStr, `<DTS:ConnectionManager`)
+	xmlStr = regexp.MustCompile(`</ConnectionManager>`).ReplaceAllString(xmlStr, `</DTS:ConnectionManager>`)
+	xmlStr = regexp.MustCompile(`<Variables`).ReplaceAllString(xmlStr, `<DTS:Variables`)
+	xmlStr = regexp.MustCompile(`</Variables>`).ReplaceAllString(xmlStr, `</DTS:Variables>`)
+	xmlStr = regexp.MustCompile(`<Variable`).ReplaceAllString(xmlStr, `<DTS:Variable`)
+	xmlStr = regexp.MustCompile(`</Variable>`).ReplaceAllString(xmlStr, `</DTS:Variable>`)
+	xmlStr = regexp.MustCompile(`<VariableValue`).ReplaceAllString(xmlStr, `<DTS:VariableValue`)
+	xmlStr = regexp.MustCompile(`</VariableValue>`).ReplaceAllString(xmlStr, `</DTS:VariableValue>`)
+	xmlStr = regexp.MustCompile(`<Executables`).ReplaceAllString(xmlStr, `<DTS:Executables`)
+	xmlStr = regexp.MustCompile(`</Executables>`).ReplaceAllString(xmlStr, `</DTS:Executables>`)
+	xmlStr = regexp.MustCompile(`<Executable`).ReplaceAllString(xmlStr, `<DTS:Executable`)
+	xmlStr = regexp.MustCompile(`</Executable>`).ReplaceAllString(xmlStr, `</DTS:Executable>`)
+	xmlStr = regexp.MustCompile(`<ObjectData`).ReplaceAllString(xmlStr, `<DTS:ObjectData`)
+	xmlStr = regexp.MustCompile(`</ObjectData>`).ReplaceAllString(xmlStr, `</DTS:ObjectData>`)
+	return []byte(xml.Header + xmlStr), nil
 }
 
 // MarshalToWriter writes a Package as DTSX XML to an io.Writer
@@ -2144,4 +2411,113 @@ func (p *Package) updateExecutableProperty(execName, propertyName, newValue stri
 	}
 
 	return fmt.Errorf("executable %s not found", execName)
+}
+
+// GetSqlStatementSource returns the SQL statement source from SqlTaskDataType
+func GetSqlStatementSource(s *schema.SqlTaskDataType) string {
+	if s == nil || s.SQLTaskSqlTaskBaseAttributeGroup == nil {
+		return ""
+	}
+	return s.SQLTaskSqlTaskBaseAttributeGroup.SqlStatementSourceAttr
+}
+
+// GetSqlStatementSourceFromBase returns the SQL statement source from SqlTaskBaseAttributeGroup
+func GetSqlStatementSourceFromBase(s *schema.SqlTaskBaseAttributeGroup) string {
+	if s == nil {
+		return ""
+	}
+	return s.SqlStatementSourceAttr
+}
+
+// extractTaskSpecificSQL extracts SQL from task-specific ObjectData (like Execute SQL Task)
+func (p *PackageParser) extractTaskSpecificSQL(exec *schema.AnyNonPackageExecutableType, statements *[]*SQLStatement) {
+	taskName := "Unknown"
+	if exec.ObjectNameAttr != nil {
+		taskName = *exec.ObjectNameAttr
+	}
+
+	if exec.ObjectData == nil {
+		return
+	}
+
+	// Special handling for Execute SQL Task due to namespace parsing issues
+	if exec.ExecutableTypeAttr == "Microsoft.ExecuteSQLTask" {
+		// First try the normal schema parsing
+		if exec.ObjectData.SQLTaskSqlTaskData != nil {
+			sql := GetSqlStatementSource(exec.ObjectData.SQLTaskSqlTaskData)
+			if sql != "" {
+				*statements = append(*statements, &SQLStatement{
+					TaskName:    taskName,
+					TaskType:    "Control Flow",
+					SQL:         sql,
+					RefId:       getRefId(exec),
+					Connections: p.getConnectionsForExecutable(exec),
+				})
+				return
+			}
+		}
+		// Fallback to raw XML parsing
+		sql := p.extractSQLFromExecuteSQLTask(exec)
+		if sql != "" {
+			*statements = append(*statements, &SQLStatement{
+				TaskName:    taskName,
+				TaskType:    "Control Flow",
+				SQL:         sql,
+				RefId:       getRefId(exec),
+				Connections: p.getConnectionsForExecutable(exec),
+			})
+		}
+		return
+	}
+
+	// Check for SQL Task data
+	if exec.ObjectData.SQLTaskSqlTaskData != nil {
+		sqlTaskData := exec.ObjectData.SQLTaskSqlTaskData
+		if sqlTaskData.SQLTaskSqlTaskBaseAttributeGroup != nil &&
+			sqlTaskData.SQLTaskSqlTaskBaseAttributeGroup.SqlStatementSourceAttr != "" {
+			*statements = append(*statements, &SQLStatement{
+				TaskName:    taskName,
+				TaskType:    "Control Flow",
+				SQL:         sqlTaskData.SQLTaskSqlTaskBaseAttributeGroup.SqlStatementSourceAttr,
+				RefId:       getRefId(exec),
+				Connections: p.getConnectionsForExecutable(exec),
+			})
+		}
+	}
+
+	// Check for other task types that might have SQL
+	// Add more task types here as needed
+}
+
+// extractSQLFromExecuteSQLTask extracts SQL from Execute SQL Task by parsing the raw XML
+func (p *PackageParser) extractSQLFromExecuteSQLTask(exec *schema.AnyNonPackageExecutableType) string {
+	if exec.ObjectData == nil {
+		return ""
+	}
+
+	// Use the InnerXML field that contains the raw XML
+	xmlStr := exec.ObjectData.InnerXML
+
+	// Find the SqlStatementSource attribute
+	// The XML contains: SQLTask:SqlStatementSource="EXEC [ETC].[GetUtcDate]"
+	start := strings.Index(xmlStr, `SqlStatementSource="`)
+	if start == -1 {
+		return ""
+	}
+
+	start += len(`SqlStatementSource="`)
+	end := strings.Index(xmlStr[start:], `"`)
+	if end == -1 {
+		return ""
+	}
+
+	sql := xmlStr[start : start+end]
+	// Unescape XML entities if any
+	sql = strings.ReplaceAll(sql, "&lt;", "<")
+	sql = strings.ReplaceAll(sql, "&gt;", ">")
+	sql = strings.ReplaceAll(sql, "&amp;", "&")
+	sql = strings.ReplaceAll(sql, "&quot;", `"`)
+	sql = strings.ReplaceAll(sql, "&apos;", "'")
+
+	return sql
 }

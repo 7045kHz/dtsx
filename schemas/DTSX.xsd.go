@@ -36,6 +36,8 @@ type AnyNonPackageExecutableType struct {
 	RefIdAttr              *string                          `xml:"refId,attr"`
 	ExecutableTypeAttr     string                           `xml:"ExecutableType,attr"`
 	ObjectNameAttr         *string                          `xml:"ObjectName,attr"`
+	CreationNameAttr       *string                          `xml:"CreationName,attr"`
+	DTSIDAttr              *string                          `xml:"DTSID,attr"`
 	ThreadHintAttr         *int                             `xml:"ThreadHint,attr"`
 	ForEachEnumerator      *ForEachEnumeratorType           `xml:"ForEachEnumerator"`
 	Property               []*Property                      `xml:"Property"`
@@ -190,6 +192,7 @@ type ExecutableObjectDataType struct {
 	WMIEWTaskData                          *WMIEWTaskDataObjectDataType                    `xml:"WMIEWTaskData"`
 	XMLTaskData                            *XMLTaskDataObjectDataType                      `xml:"XMLTaskData"`
 	InnerObject                            *InnerObjectObjectDataType                      `xml:"InnerObject"`
+	InnerXML                               string                                          `xml:",innerxml"`
 }
 
 // ASDdlDataObjectDataType ...
@@ -996,11 +999,14 @@ type ConnectionManagerObjectDataType struct {
 
 // ConnectionManagerObjectDataConnectionManagerType ...
 type ConnectionManagerObjectDataConnectionManagerType struct {
-	Property       []*Property           `xml:"Property"`
-	FlatFileColumn []*FlatFileColumnType `xml:"FlatFileColumn"`
-	CacheColumn    []*CacheColumnType    `xml:"CacheColumn"`
-	FtpConnection  *FtpConnectionType    `xml:"FtpConnection"`
-	HttpConnection *HttpConnectionType   `xml:"HttpConnection"`
+	ConnectRetryCountAttr    *string               `xml:"ConnectRetryCount,attr"`
+	ConnectRetryIntervalAttr *string               `xml:"ConnectRetryInterval,attr"`
+	ConnectionStringAttr     *string               `xml:"ConnectionString,attr"`
+	Property                 []*Property           `xml:"Property"`
+	FlatFileColumn           []*FlatFileColumnType `xml:"FlatFileColumn"`
+	CacheColumn              []*CacheColumnType    `xml:"CacheColumn"`
+	FtpConnection            *FtpConnectionType    `xml:"FtpConnection"`
+	HttpConnection           *HttpConnectionType   `xml:"HttpConnection"`
 }
 
 // FlatFileColumnType ...

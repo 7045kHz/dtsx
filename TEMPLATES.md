@@ -9,11 +9,23 @@ Templates are predefined package structures with:
 - **Parameterized configuration**: Variables, connection strings, and properties can be customized
 - **Built-in validation**: Templates generate valid DTSX packages
 - **Dependency management**: Automatic handling of connections and variables
+- **File-based storage**: Templates are stored as JSON files in a configurable directory
 - **Extensibility**: Easy to create custom templates for your organization
+
+## Template Storage
+
+Templates are stored as JSON files in a templates directory. By default, templates are loaded from a `templates/` directory in the current working directory. You can:
+
+- **Load from custom directories**: Use `LoadTemplatesFromDirectory()` to load templates from any directory
+- **Save templates to files**: Use `template.SaveToFile()` to save individual templates
+- **Platform agnostic**: All path operations use Go's `filepath` package for cross-platform compatibility
+- **Automatic directory creation**: Template directories are created automatically when needed
+- **Initialize directories**: Use `InitializeTemplatesDirectory()` to create a directory with built-in templates
+- **Automatic fallback**: If no template files exist, built-in templates are automatically created and saved
 
 ## Built-in Templates
 
-The library comes with two built-in templates:
+The library comes with three built-in templates that are automatically saved to the templates directory:
 
 ### Basic ETL Template
 
@@ -31,6 +43,23 @@ A fundamental Extract-Transform-Load workflow template that includes:
 - `SourceQuery`: SQL query for data extraction
 - `DestinationTable`: Destination table name
 - `BatchSize`: Batch size for data loading
+- `PackageName`: Name for the generated package
+
+### Table Copy Template
+
+A simple template for copying data between database tables with identical layouts:
+
+- Source and destination database connections
+- Direct table-to-table data transfer using INSERT...SELECT
+- Configurable source and destination table names
+- Automatic precedence constraint between extract and load tasks
+
+**Parameters:**
+
+- `SourceConnection`: Source database connection string
+- `DestinationConnection`: Destination database connection string
+- `SourceTable`: Source table name (schema.table format)
+- `DestinationTable`: Destination table name (schema.table format)
 - `PackageName`: Name for the generated package
 
 ### File Processing Template
@@ -106,6 +135,30 @@ if err != nil {
 }
 
 fmt.Printf("Package created: %s\n", pkg.Property[0].Value)
+```
+
+### File-Based Template Operations
+
+Templates are stored as JSON files and can be loaded from custom directories:
+
+```go
+// Load templates from a custom directory
+registry, err := dtsx.LoadTemplatesFromDirectory("/path/to/my/templates")
+if err != nil {
+    log.Fatalf("Failed to load templates: %v", err)
+}
+
+// Save a template to a file
+err = template.SaveToFile("my_custom_template.json")
+if err != nil {
+    log.Fatalf("Failed to save template: %v", err)
+}
+
+// Initialize a directory with built-in templates
+err = dtsx.InitializeTemplatesDirectory("/path/to/templates")
+if err != nil {
+    log.Fatalf("Failed to initialize templates directory: %v", err)
+}
 ```
 
 ### Validating Generated Packages

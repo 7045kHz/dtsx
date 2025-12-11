@@ -107,25 +107,6 @@ func main() {
 	// Create parser for advanced analysis
 	parser := dtsx.NewPackageParser(pkg)
 
-	// Get all variables for reference
-	variables := make(map[string]string)
-	if pkg.Variables != nil && pkg.Variables.Variable != nil {
-		for _, v := range pkg.Variables.Variable {
-			varName := "unnamed"
-			if v.ObjectNameAttr != nil {
-				varName = *v.ObjectNameAttr
-			}
-			var namespace string
-			if v.NamespaceAttr != nil {
-				namespace = *v.NamespaceAttr
-			}
-			fullName := fmt.Sprintf("%s::%s", namespace, varName)
-			if v.VariableValue != nil {
-				variables[fullName] = v.VariableValue.Value
-			}
-		}
-	}
-
 	// Analyze connections and collect CSV data
 	connections := pkg.GetConnections()
 	if connections.Count == 0 {
@@ -139,7 +120,7 @@ func main() {
 	// Create a map of connection manager refIds to their details
 	connMap := make(map[string]*ConnectionAnalysis)
 	for i, cm := range connMgrs {
-		analysis := analyzeConnection(cm, variables, pkg)
+		analysis := analyzeConnection(cm, parser)
 		// Assume refId is something like "Package.ConnectionManagers[NAME]"
 		connName := analysis.Name
 		refId := fmt.Sprintf("Package.ConnectionManagers[%s]", connName)
@@ -175,8 +156,15 @@ func main() {
 		// Add rows for variables
 		for _, v := range analysis.Variables {
 			varValue := ""
-			if value, exists := variables[v]; exists {
-				varValue = value
+			if value, err := parser.GetVariableValue(v); err == nil {
+				switch val := value.(type) {
+				case string:
+					varValue = val
+				case float64:
+					varValue = fmt.Sprintf("%.0f", val)
+				default:
+					varValue = fmt.Sprintf("%v", val)
+				}
 			}
 			csvRows = append(csvRows, CSVRow{
 				File:            filename,
@@ -362,9 +350,9 @@ func main() {
 	printExecutionFlow(pkg, parser)
 }
 
-func analyzeConnection(cm *schema.ConnectionManagerType, variables map[string]string, pkg *dtsx.Package) *ConnectionAnalysis {
+func analyzeConnection(cm *schema.ConnectionManagerType, parser *dtsx.PackageParser) *ConnectionAnalysis {
 	analysis := &ConnectionAnalysis{
-		Name:        "Unknown",
+		Name:        dtsx.GetConnectionName(cm),
 		Type:        "Unknown",
 		Driver:      "Unknown",
 		Properties:  make(map[string]string),
@@ -373,9 +361,6 @@ func analyzeConnection(cm *schema.ConnectionManagerType, variables map[string]st
 	}
 
 	// Extract attributes
-	if cm.ObjectNameAttr != nil {
-		analysis.Name = *cm.ObjectNameAttr
-	}
 	if cm.CreationNameAttr != nil {
 		analysis.Driver = *cm.CreationNameAttr
 		analysis.Type = getConnectionType(*cm.CreationNameAttr)
@@ -405,9 +390,16 @@ func analyzeConnection(cm *schema.ConnectionManagerType, variables map[string]st
 				vars := extractVariables(expression)
 				analysis.Variables = append(analysis.Variables, vars...)
 
-				// Try to evaluate expressions using the advanced evaluator
-				if evaluated := evaluateExpressionAdvanced(expression, pkg); evaluated != "" {
-					analysis.Evaluated[propName] = evaluated
+				// Try to evaluate expressions using the parser's evaluator
+				if result, err := parser.EvaluateExpression(expression); err == nil {
+					switch v := result.(type) {
+					case string:
+						analysis.Evaluated[propName] = v
+					case float64:
+						analysis.Evaluated[propName] = fmt.Sprintf("%.0f", v)
+					default:
+						analysis.Evaluated[propName] = fmt.Sprintf("%v", v)
+					}
 				}
 			}
 		}
@@ -453,25 +445,6 @@ func extractVariables(expression string) []string {
 		}
 	}
 	return vars
-}
-
-func evaluateExpressionAdvanced(expression string, pkg *dtsx.Package) string {
-	// Use the advanced SSIS expression evaluator
-	result, err := dtsx.EvaluateExpression(expression, pkg)
-	if err != nil {
-		// Return empty string if evaluation fails
-		return ""
-	}
-
-	// Convert result to string
-	switch v := result.(type) {
-	case string:
-		return v
-	case float64:
-		return fmt.Sprintf("%.0f", v) // Remove decimal for integers
-	default:
-		return fmt.Sprintf("%v", v)
-	}
 }
 
 func extractDataflowComponents(objectData *schema.ExecutableObjectDataType, connMap map[string]*ConnectionAnalysis) []ComponentInfo {

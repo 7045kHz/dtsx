@@ -1,17 +1,30 @@
-<Executable xmlns="www.microsoft.com/SqlServer/Dts">
-  <Property Name="Name">CustomerDataMigration</Property>
-  <ConnectionManagers>
-    <ConnectionManager ObjectName="SourceDB">
-      <Property Name="ConnectionString">Server=localhost;Database=SourceDB;Trusted_Connection=True</Property>
-    </ConnectionManager>
-    <ConnectionManager ObjectName="DestinationDB">
-      <Property Name="ConnectionString">Server=localhost;Database=DestDB;Trusted_Connection=True</Property>
-    </ConnectionManager>
-  </ConnectionManagers>
-  <Variables>
-    <Variable Namespace="User" ObjectName="BatchSize">
-      <VariableValue>10000</VariableValue>
-    </Variable>
-  </Variables>
-  <Executables></Executables>
-</Executable>
+<?xml version="1.0" encoding="UTF-8"?>
+<DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts" DTS:refId="Package" DTS:CreationDate="12/11/2025 9:42:50 AM" DTS:CreationName="Microsoft.Package" DTS:CreatorComputerName="localhost" DTS:CreatorName="dtsx-generator" DTS:Description="Generated from DTSX template" DTS:DTSID="{4827da35-1559-1ccf-c509-f948615c637d}" DTS:EnableConfig="False" DTS:ExecutableType="Microsoft.Package" DTS:LastModifiedProductVersion="16.0.0.0" DTS:LocaleID="1033" DTS:ObjectName="CustomerDataMigration" DTS:PackageType="5" DTS:VersionBuild="1" DTS:VersionGUID="{36cbb308-bf88-92a1-ed1e-ee9f26dcd5e8}">
+  <DTS:Property DTS:Name="Name">CustomerDataMigration</DTS:Property>
+  <DTS:ConnectionManagers>
+    <DTS:ConnectionManager DTS:refId="Package.ConnectionManagers[SourceDB]" DTS:CreationName="OLEDB" DTS:DTSID="{63870a79-f226-98eb-c57f-d24a7ed9ea0f}" DTS:ObjectName="SourceDB">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager DTS:ConnectRetryCount="1" DTS:ConnectRetryInterval="5" DTS:ConnectionString="Server=localhost;Database=SourceDB;Trusted_Connection=True"></DTS:ConnectionManager>
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+    <DTS:ConnectionManager DTS:refId="Package.ConnectionManagers[DestinationDB]" DTS:CreationName="OLEDB" DTS:DTSID="{83d2591f-65c5-6182-139d-4a1b884d8144}" DTS:ObjectName="DestinationDB">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager DTS:ConnectRetryCount="1" DTS:ConnectRetryInterval="5" DTS:ConnectionString="Server=localhost;Database=DestDB;Trusted_Connection=True"></DTS:ConnectionManager>
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+  </DTS:ConnectionManagers>
+  <DTS:Variables>
+    <DTS:Variable DTS:Namespace="User" DTS:ObjectName="BatchSize">
+      <DTS:VariableValue DTS:DataType="8">10000</DTS:VariableValue>
+    </DTS:Variable>
+  </DTS:Variables>
+  <DTS:Executables>
+    <DTS:Executable DTS:refId="Package\Extract Data" DTS:ExecutableType="Microsoft.ExecuteSQLTask" DTS:ObjectName="Extract Data" DTS:CreationName="Microsoft.ExecuteSQLTask" DTS:DTSID="{201449da-07c0-7141-c43e-b2795de98214}">
+      <DTS:Property DTS:Name="Connection">SourceDB</DTS:Property>
+      <DTS:Property DTS:Name="SqlStatementSource">SELECT CustomerID, CustomerName, Email FROM Customers WHERE Status = &#39;Active&#39;</DTS:Property>
+    </DTS:Executable>
+    <DTS:Executable DTS:refId="Package\Load Data" DTS:ExecutableType="SSIS.Pipeline.8" DTS:ObjectName="Load Data" DTS:CreationName="Microsoft.Pipeline" DTS:DTSID="{cdd6cb4d-2c38-73f7-a429-c72c1ac9d2e4}">
+      <DTS:Property DTS:Name="Connection">DestinationDB</DTS:Property>
+    </DTS:Executable>
+  </DTS:Executables>
+</DTS:Executable>

@@ -23,8 +23,10 @@ A comprehensive Go library for reading, writing, and analyzing DTSX (SQL Server 
 - **Query API**: Convenient methods to analyze connections, variables, executables, and expressions
 - **Connection Analysis**: Comprehensive analysis of connection managers with drivers and dynamic properties
 - **SQL Extraction**: Extract SQL statements from control flow and dataflow tasks
-- **Execution Order Analysis**: Topological sorting and precedence constraint analysis
+- **Execution Order Analysis**: Topological sorting and precedence constraint analysis with execution flow descriptions
+- **Expression Details**: Detailed expression analysis with evaluation results and dependency tracking
 - **Package Parser**: Centralized parsing with caching for performance
+- **Utility Functions**: Convenient getters for connection names, variable values, executable names, and more
 - **Full schema support**: Generated from official SSIS XSD schemas with container element support
 - **Type-safe**: Strongly typed Go structures for all DTSX elements
 
@@ -186,8 +188,54 @@ for refId, order := range orders {
     fmt.Printf("%s: Order %d\n", refId, order)
 }
 
+// Get textual execution flow description
+flowDesc := analyzer.GetExecutionFlowDescription()
+fmt.Print(flowDesc)
+
 // Validate precedence constraints
 errors := analyzer.ValidateConstraints()
+```
+
+### Expression Details Analysis
+
+Get comprehensive information about expressions including evaluation results and dependencies:
+
+```go
+expressions := pkg.GetExpressions()
+exprs := expressions.Results.([]*dtsx.ExpressionInfo)
+
+for _, expr := range exprs {
+    details := dtsx.GetExpressionDetails(expr, pkg)
+    fmt.Printf("Expression: %s\n", details.Expression)
+    fmt.Printf("  Location: %s\n", details.Location)
+    if details.EvaluatedValue != "" {
+        fmt.Printf("  Evaluated: %s\n", details.EvaluatedValue)
+    }
+    if len(details.Dependencies) > 0 {
+        fmt.Printf("  Dependencies: %v\n", details.Dependencies)
+    }
+}
+```
+
+### Utility Functions
+
+Convenient getter functions for common DTSX element properties:
+
+```go
+// Get connection manager details
+connName := dtsx.GetConnectionName(connectionManager)
+connString := dtsx.GetConnectionString(connectionManager)
+
+// Get variable details
+varName := dtsx.GetVariableName(variable)
+varValue := dtsx.GetVariableValue(variable)
+
+// Get executable details
+execName := dtsx.GetExecutableName(executable)
+
+// Get detailed expression analysis
+details := dtsx.GetExpressionDetails(exprInfo, pkg)
+fmt.Printf("Evaluated: %s, Dependencies: %v\n", details.EvaluatedValue, details.Dependencies)
 ```
 
 ### Enhanced Package Validation
@@ -329,6 +377,7 @@ for _, expr := range exprs {
 - `GetExecutionOrder(refId string) (int, error)` - Get execution order for task
 - `GetAllExecutionOrders() (map[string]int, error)` - Get all execution orders
 - `GetExecutableChain(refId string) ([]string, error)` - Get execution chain
+- `GetExecutionFlowDescription() string` - Get textual execution flow description
 - `ValidateConstraints() []error` - Validate precedence constraints
 
 ### PackageValidator Methods

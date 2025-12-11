@@ -1,0 +1,159 @@
+{
+  "Name": "Table Copy",
+  "Description": "Template for copying data from one database table to another with identical layout",
+  "BasePackage": {
+    "XMLName": {
+      "Space": "",
+      "Local": ""
+    },
+    "ExecutableTypeAttr": null,
+    "Property": [
+      {
+        "NameAttr": "Name",
+        "DataTypeAttr": null,
+        "Value": "{{PackageName}}"
+      }
+    ],
+    "ConnectionManagers": {
+      "ConnectionManager": [
+        {
+          "RefIdAttr": null,
+          "CreationNameAttr": null,
+          "DTSIDAttr": null,
+          "ObjectNameAttr": "SourceDB",
+          "Property": [
+            {
+              "NameAttr": "ConnectionString",
+              "DataTypeAttr": null,
+              "Value": "{{SourceConnection}}"
+            }
+          ],
+          "PropertyExpression": null,
+          "ObjectData": null
+        },
+        {
+          "RefIdAttr": null,
+          "CreationNameAttr": null,
+          "DTSIDAttr": null,
+          "ObjectNameAttr": "DestinationDB",
+          "Property": [
+            {
+              "NameAttr": "ConnectionString",
+              "DataTypeAttr": null,
+              "Value": "{{DestinationConnection}}"
+            }
+          ],
+          "PropertyExpression": null,
+          "ObjectData": null
+        }
+      ]
+    },
+    "Configuration": null,
+    "LogProvider": null,
+    "Variables": {
+      "Variable": [
+        {
+          "NamespaceAttr": "User",
+          "ObjectNameAttr": "SourceTable",
+          "Property": null,
+          "PropertyExpression": null,
+          "VariableValue": {
+            "DataTypeAttr": null,
+            "DataSubTypeAttr": null,
+            "Value": "{{SourceTable}}"
+          }
+        },
+        {
+          "NamespaceAttr": "User",
+          "ObjectNameAttr": "DestinationTable",
+          "Property": null,
+          "PropertyExpression": null,
+          "VariableValue": {
+            "DataTypeAttr": null,
+            "DataSubTypeAttr": null,
+            "Value": "{{DestinationTable}}"
+          }
+        }
+      ]
+    },
+    "LoggingOptions": null,
+    "PropertyExpression": null,
+    "Executable": [
+      {
+        "RefIdAttr": "Package\\Extract Data",
+        "ExecutableTypeAttr": "ExecuteSQLTask",
+        "ObjectNameAttr": "Extract Data",
+        "ThreadHintAttr": null,
+        "ForEachEnumerator": null,
+        "Property": [
+          {
+            "NameAttr": "Connection",
+            "DataTypeAttr": null,
+            "Value": "SourceDB"
+          },
+          {
+            "NameAttr": "SqlStatementSource",
+            "DataTypeAttr": null,
+            "Value": "SELECT * FROM {{SourceTable}}"
+          }
+        ],
+        "Variable": null,
+        "LoggingOptions": null,
+        "PropertyExpression": null,
+        "Executable": null,
+        "PrecedenceConstraint": null,
+        "ForEachVariableMapping": null,
+        "EventHandler": null,
+        "ObjectData": null
+      },
+      {
+        "RefIdAttr": "Package\\Load Data",
+        "ExecutableTypeAttr": "ExecuteSQLTask",
+        "ObjectNameAttr": "Load Data",
+        "ThreadHintAttr": null,
+        "ForEachEnumerator": null,
+        "Property": [
+          {
+            "NameAttr": "Connection",
+            "DataTypeAttr": null,
+            "Value": "DestinationDB"
+          },
+          {
+            "NameAttr": "SqlStatementSource",
+            "DataTypeAttr": null,
+            "Value": "INSERT INTO {{DestinationTable}} SELECT * FROM {{SourceTable}}"
+          }
+        ],
+        "Variable": null,
+        "LoggingOptions": null,
+        "PropertyExpression": null,
+        "Executable": null,
+        "PrecedenceConstraint": [
+          {
+            "Property": null,
+            "PropertyExpression": null,
+            "Executable": [
+              {
+                "IDREFAttr": "Package\\Extract Data",
+                "IsFromAttr": null
+              }
+            ]
+          }
+        ],
+        "ForEachVariableMapping": null,
+        "EventHandler": null,
+        "ObjectData": null
+      }
+    ],
+    "PrecedenceConstraint": null,
+    "EventHandler": null,
+    "PackageVariable": null
+  },
+  "Parameters": {
+    "DestinationConnection": "Destination database connection string",
+    "DestinationTable": "Destination table name (schema.table format)",
+    "PackageName": "Name for the generated package",
+    "SourceConnection": "Source database connection string",
+    "SourceTable": "Source table name (schema.table format)"
+  }
+}

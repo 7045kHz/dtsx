@@ -10,6 +10,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/7045kHz/dtsx"
 )
@@ -93,6 +94,67 @@ func main() {
 		} else {
 			fmt.Println("✓ No unused variables")
 		}
+	}
+
+	// Demonstrate Table Copy template
+	fmt.Println("\n" + strings.Repeat("=", 50))
+	tableCopyTemplate := registry.Get("Table Copy")
+	if tableCopyTemplate != nil {
+		fmt.Printf("Using template: %s\n", tableCopyTemplate.Name)
+		fmt.Printf("Description: %s\n", tableCopyTemplate.Description)
+		fmt.Println("Parameters:")
+		for param, desc := range tableCopyTemplate.Parameters {
+			fmt.Printf("  - %s: %s\n", param, desc)
+		}
+		fmt.Println()
+
+		// Instantiate with sample parameters
+		tableCopyParams := map[string]interface{}{
+			"SourceConnection":      "Server=prod-server;Database=ProductionDB;Trusted_Connection=True",
+			"DestinationConnection": "Server=staging-server;Database=StagingDB;Trusted_Connection=True",
+			"SourceTable":           "dbo.Customers",
+			"DestinationTable":      "dbo.Customers_Backup",
+			"PackageName":           "CustomerTableCopy",
+		}
+
+		fmt.Println("Instantiating Table Copy template with parameters...")
+		tableCopyPkg, err := tableCopyTemplate.Instantiate(tableCopyParams)
+		if err != nil {
+			log.Fatalf("Failed to instantiate Table Copy template: %v", err)
+		}
+
+		fmt.Printf("✓ Table Copy template instantiated successfully\n")
+		fmt.Printf("✓ Package name: %s\n", tableCopyPkg.Property[0].Value)
+
+		// Show the generated SQL statements
+		fmt.Println("\nGenerated SQL statements:")
+		parser := dtsx.NewPackageParser(tableCopyPkg)
+		sqlStatements := parser.GetSQLStatements()
+		for _, stmt := range sqlStatements {
+			fmt.Printf("  %s (%s): %s\n", stmt.TaskName, stmt.TaskType, stmt.SQL)
+		}
+
+		// Show execution order
+		fmt.Println("\nExecution order:")
+		analyzer := dtsx.NewPrecedenceAnalyzer(tableCopyPkg)
+		orders, err := analyzer.GetAllExecutionOrders()
+		if err != nil {
+			fmt.Printf("  Error getting execution orders: %v\n", err)
+		} else if len(orders) == 0 {
+			fmt.Println("  No execution orders found")
+		} else {
+			for refId, order := range orders {
+				fmt.Printf("  Order %d: %s\n", order, refId)
+			}
+		}
+
+		// Save the package
+		tableCopyOutputFile := "generated_table_copy_package.dtsx"
+		err = dtsx.MarshalToFile(tableCopyOutputFile, tableCopyPkg)
+		if err != nil {
+			log.Fatalf("Failed to save Table Copy package: %v", err)
+		}
+		fmt.Printf("✓ Table Copy package saved to: %s\n", tableCopyOutputFile)
 	}
 
 	fmt.Println("\nTemplate system demonstration complete!")

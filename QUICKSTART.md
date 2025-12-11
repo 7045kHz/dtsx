@@ -50,6 +50,36 @@ if err == nil {
 // Get all expressions in the package
 expressions := pkg.GetExpressions()
 fmt.Printf("Found %d expressions\n", expressions.Count)
+
+// Get detailed expression analysis
+exprs := expressions.Results.([]*dtsx.ExpressionInfo)
+for _, expr := range exprs {
+    details := dtsx.GetExpressionDetails(expr, pkg)
+    fmt.Printf("Expression: %s (Location: %s)\n", details.Expression, details.Location)
+    if details.EvaluatedValue != "" {
+        fmt.Printf("  Evaluated: %s\n", details.EvaluatedValue)
+    }
+    if len(details.Dependencies) > 0 {
+        fmt.Printf("  Dependencies: %v\n", details.Dependencies)
+    }
+}
+```
+
+### Using Utility Functions
+
+Convenient getter functions for common DTSX element properties:
+
+```go
+// Get connection manager details
+connName := dtsx.GetConnectionName(connectionManager)
+connString := dtsx.GetConnectionString(connectionManager)
+
+// Get variable details
+varName := dtsx.GetVariableName(variable)
+varValue := dtsx.GetVariableValue(variable)
+
+// Get executable details
+execName := dtsx.GetExecutableName(executable)
 ```
 
 ### Update Package Elements
@@ -254,6 +284,10 @@ if err == nil {
     }
 }
 
+// Get textual execution flow description
+flowDesc := analyzer.GetExecutionFlowDescription()
+fmt.Print(flowDesc)
+
 // Get the execution chain (all predecessors) for a task
 chain, err := analyzer.GetExecutableChain("Package\\FinalTask")
 if err == nil {
@@ -298,7 +332,10 @@ The validator checks for:
 Built-in templates include:
 
 - **Basic ETL**: Extract-Transform-Load workflow
+- **Table Copy**: Direct table-to-table data transfer
 - **File Processing**: File operations with error handling
+
+Templates are stored as JSON files in a `templates/` directory and are automatically created on first use.
 
 ### Write a DTSX file
 
@@ -335,6 +372,9 @@ go run examples/build_package.go
 
 # Use reusable package templates
 go run examples/use_templates.go
+
+# Custom template directory management
+go run examples/custom_templates.go
 
 # Run package with DTExec
 go run examples/run_dtsx.go SSIS_EXAMPLES/ConfigFile.dtsx
