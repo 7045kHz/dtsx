@@ -19,6 +19,8 @@ import (
 	schema "github.com/7045kHz/dtsx/schemas"
 )
 
+// Note: write helpers are internalized; use `Marshal` and the standard library to persist files.
+
 // generateGUID creates a simple GUID-like string for DTSID
 func generateGUID() string {
 	bytes := make([]byte, 16)
@@ -1159,11 +1161,31 @@ func Marshal(pkg *Package) ([]byte, error) {
 	xmlStr = regexp.MustCompile(`</Executable>`).ReplaceAllString(xmlStr, `</DTS:Executable>`)
 	xmlStr = regexp.MustCompile(`<ObjectData`).ReplaceAllString(xmlStr, `<DTS:ObjectData`)
 	xmlStr = regexp.MustCompile(`</ObjectData>`).ReplaceAllString(xmlStr, `</DTS:ObjectData>`)
+
+	// Pipeline component properties are represented as lowercase <property> elements
+	// and in the original DTSX they use unprefixed attributes. After the generic
+	// attribute prefixing above, these end up with `DTS:` prefixes while the
+	// element remains lowercase. This mismatch can cause SSIS validation errors.
+	// Remove `DTS:` prefixes from attributes specifically within lowercase
+	// `<property ...>` opening tags so they match the original DTSX structure.
+	// Use DOTALL to capture attributes across newlines for multiline formatting
+	propRe := regexp.MustCompile(`(?s)<property\s+([^>]*?)>`) // matches only lowercase `property` and attributes across lines
+	xmlStr = propRe.ReplaceAllStringFunc(xmlStr, func(match string) string {
+		// Extract attributes part and remove any `DTS:` prefixes from attr names
+		m := propRe.FindStringSubmatch(match)
+		if len(m) < 2 {
+			return match
+		}
+		attrs := m[1]
+		attrs = strings.ReplaceAll(attrs, "DTS:", "")
+		return "<property " + attrs + ">"
+	})
+
 	return []byte(xml.Header + xmlStr), nil
 }
 
-// MarshalToWriter writes a Package as DTSX XML to an io.Writer
-func MarshalToWriter(w io.Writer, pkg *Package) error {
+// marshalToWriter writes a Package as DTSX XML to an io.Writer (unexported)
+func marshalToWriter(w io.Writer, pkg *Package) error {
 	data, err := Marshal(pkg)
 	if err != nil {
 		return err
@@ -1172,16 +1194,18 @@ func MarshalToWriter(w io.Writer, pkg *Package) error {
 	return err
 }
 
-// MarshalToFile writes a Package as DTSX XML to a file
-func MarshalToFile(filename string, pkg *Package) error {
+// marshalToFile writes a Package as DTSX XML to a file (unexported)
+func marshalToFile(filename string, pkg *Package) error {
 	file, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	return MarshalToWriter(file, pkg)
+	return marshalToWriter(file, pkg)
 }
+
+// Note: MarshalToWriter and MarshalToFile are intentionally unexported (marshalToWriter/marshalToFile).
 
 // IsDTSXPackage validates if the given filename is a valid DTSX package.
 // It checks if the file exists, is readable, and contains valid DTSX XML structure.
@@ -1958,8 +1982,8 @@ func (p *Package) GetOptimizationSuggestions() []ValidationError {
 	return suggestions
 }
 
-// UpdateVariable updates the value of an existing variable
-func (p *Package) UpdateVariable(namespace string, name, newValue string) error {
+// updateVariable updates the value of an existing variable (internal)
+func (p *Package) updateVariable(namespace string, name, newValue string) error {
 	if p == nil || p.Variables == nil || p.Variables.Variable == nil {
 		return fmt.Errorf("package has no variables")
 	}
@@ -1980,8 +2004,10 @@ func (p *Package) UpdateVariable(namespace string, name, newValue string) error 
 	return fmt.Errorf("variable %s::%s not found", namespace, name)
 }
 
-// UpdateConnectionString updates the connection string of an existing connection manager
-func (p *Package) UpdateConnectionString(connectionName, newConnectionString string) error {
+// UpdateVariable was removed from the exported API; use internal updateVariable instead.
+
+// updateConnectionString updates the connection string of an existing connection manager (internal)
+func (p *Package) updateConnectionString(connectionName, newConnectionString string) error {
 	if p == nil || p.ConnectionManagers == nil || p.ConnectionManagers.ConnectionManager == nil {
 		return fmt.Errorf("package has no connection managers")
 	}
@@ -1995,6 +2021,10 @@ func (p *Package) UpdateConnectionString(connectionName, newConnectionString str
 				connName = prop.PropertyElementBaseType.AnySimpleType.Value
 				break
 			}
+		}
+		// If the connection manager uses ObjectNameAttr directly, use it as a fallback
+		if connName == "" && cm.ObjectNameAttr != nil {
+			connName = *cm.ObjectNameAttr
 		}
 
 		if connName == connectionName {
@@ -2013,8 +2043,10 @@ func (p *Package) UpdateConnectionString(connectionName, newConnectionString str
 	return fmt.Errorf("connection manager %s not found", connectionName)
 }
 
-// UpdateExpression updates an expression for a specific property
-func (p *Package) UpdateExpression(targetType, targetName, propertyName, newExpression string) error {
+// UpdateConnectionString was removed from the exported API; use internal updateConnectionString instead.
+
+// updateExpression updates an expression for a specific property (internal)
+func (p *Package) updateExpression(targetType, targetName, propertyName, newExpression string) error {
 	if p == nil {
 		return fmt.Errorf("package is nil")
 	}
@@ -2030,6 +2062,8 @@ func (p *Package) UpdateExpression(targetType, targetName, propertyName, newExpr
 		return fmt.Errorf("unsupported target type: %s (supported: variable, connection, executable)", targetType)
 	}
 }
+
+// UpdateExpression was removed from the exported API; use internal updateExpression instead.
 
 // updateVariableExpression updates an expression on a variable
 func (p *Package) updateVariableExpression(varName, propertyName, newExpression string) error {
@@ -2184,8 +2218,8 @@ func (p *Package) updateExecutableExpression(execName, propertyName, newExpressi
 	return fmt.Errorf("executable %s not found", execName)
 }
 
-// UpdateProperty updates any property on any element (package, variable, connection, executable)
-func (p *Package) UpdateProperty(targetType, targetName, propertyName, newValue string) error {
+// updateProperty updates any property on any element (package, variable, connection, executable) (internal)
+func (p *Package) updateProperty(targetType, targetName, propertyName, newValue string) error {
 	if p == nil {
 		return fmt.Errorf("package is nil")
 	}
@@ -2203,6 +2237,8 @@ func (p *Package) UpdateProperty(targetType, targetName, propertyName, newValue 
 		return fmt.Errorf("unsupported target type: %s (supported: package, variable, connection, executable)", targetType)
 	}
 }
+
+// UpdateProperty was removed from the exported API; use internal updateProperty instead.
 
 // updatePackageProperty updates a property on the package itself
 func (p *Package) updatePackageProperty(propertyName, newValue string) error {

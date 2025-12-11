@@ -636,7 +636,7 @@
                   dataType="System.String"
                   description="The SQL command to be executed."
                   name="SqlCommand"
-                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor">select * from production.product where color=?</property>
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor">select * from production.product where color=&#39;Blue&#39;</property>
                 <property
                   dataType="System.String"
                   description="The variable that contains the SQL command to be executed."

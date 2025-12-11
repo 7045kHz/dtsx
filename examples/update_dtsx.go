@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/7045kHz/dtsx"
+	schema "github.com/7045kHz/dtsx/schemas"
 )
 
 func main() {
@@ -67,12 +68,12 @@ func main() {
 			fmt.Printf("Updating variable %s::%s from '%s' to 'UpdatedValue'\n",
 				*v.NamespaceAttr, *v.ObjectNameAttr, oldValue)
 
-			err := pkg.UpdateVariable(*v.NamespaceAttr, *v.ObjectNameAttr, "UpdatedValue")
-			if err != nil {
-				fmt.Printf("Error updating variable: %v\n", err)
+			if v.VariableValue != nil {
+				v.VariableValue.Value = "UpdatedValue"
 			} else {
-				fmt.Printf("Variable updated successfully!\n")
+				v.VariableValue = &schema.VariableValue{Value: "UpdatedValue"}
 			}
+			fmt.Printf("Variable updated successfully!\n")
 		}
 	}
 
@@ -97,11 +98,19 @@ func main() {
 		if connName != "" {
 			fmt.Printf("Updating connection '%s' to 'UpdatedConnectionString'\n", connName)
 
-			err := pkg.UpdateConnectionString(connName, "UpdatedConnectionString")
-			if err != nil {
-				fmt.Printf("Error updating connection: %v\n", err)
-			} else {
-				fmt.Printf("Connection updated successfully!\n")
+			// Update connection string directly
+			for _, cm := range pkg.ConnectionManagers.ConnectionManager {
+				var name string
+				for _, prop := range cm.Property {
+					if prop.NameAttr != nil && *prop.NameAttr == "ObjectName" && prop.PropertyElementBaseType != nil && prop.PropertyElementBaseType.AnySimpleType != nil {
+						name = prop.PropertyElementBaseType.AnySimpleType.Value
+					}
+					if prop.NameAttr != nil && *prop.NameAttr == "ConnectionString" && prop.PropertyElementBaseType != nil && prop.PropertyElementBaseType.AnySimpleType != nil && name == connName {
+						prop.PropertyElementBaseType.AnySimpleType.Value = "UpdatedConnectionString"
+						fmt.Printf("Connection updated successfully!\n")
+						break
+					}
+				}
 			}
 		} else {
 			fmt.Printf("No named connections found\n")
@@ -131,11 +140,24 @@ func main() {
 						fmt.Printf("  Old: %s\n", expr.Expression)
 						fmt.Printf("  New: @[System::StartTime]\n")
 
-						err := pkg.UpdateExpression("Variable", varName, expr.Name, "@[System::StartTime]")
-						if err != nil {
-							fmt.Printf("Error updating expression: %v\n", err)
-						} else {
-							fmt.Printf("Expression updated successfully!\n")
+						// Update expression by finding the variable and setting PropertyExpression
+						// Parse namespace::name
+						parts := strings.Split(varName, "::")
+						if len(parts) == 2 {
+							ns, nm := parts[0], parts[1]
+							for _, varx := range pkg.Variables.Variable {
+								if varx.NamespaceAttr != nil && varx.ObjectNameAttr != nil && *varx.NamespaceAttr == ns && *varx.ObjectNameAttr == nm {
+									if varx.PropertyExpression == nil {
+										varx.PropertyExpression = []*schema.PropertyExpressionElementType{}
+									}
+									varx.PropertyExpression = append(varx.PropertyExpression, &schema.PropertyExpressionElementType{
+										NameAttr: expr.Name,
+										AnySimpleType: &schema.AnySimpleType{Value: "@[System::StartTime]"},
+									})
+									fmt.Printf("Expression updated successfully!\n")
+									break
+								}
+							}
 						}
 						break
 					}
@@ -151,11 +173,13 @@ func main() {
 
 	// Update a package property
 	fmt.Printf("Updating package property 'CreatorName' to 'UpdatedByDTSXLibrary'\n")
-	err := pkg.UpdateProperty("package", "", "CreatorName", "UpdatedByDTSXLibrary")
-	if err != nil {
-		fmt.Printf("Error updating package property: %v\n", err)
-	} else {
-		fmt.Printf("Package property updated successfully!\n")
+	// Update package property directly
+	for _, prop := range pkg.Property {
+		if prop.NameAttr != nil && *prop.NameAttr == "CreatorName" {
+			prop.Value = "UpdatedByDTSXLibrary"
+			fmt.Printf("Package property updated successfully!\n")
+			break
+		}
 	}
 
 	// Update an executable property (if executables exist)
@@ -177,12 +201,15 @@ func main() {
 
 		if execName != "" {
 			fmt.Printf("Updating executable '%s' property 'Description' to 'Updated via UpdateProperty'\n", execName)
-			err := pkg.UpdateProperty("executable", execName, "Description", "Updated via UpdateProperty")
-			if err != nil {
-				fmt.Printf("Error updating executable property: %v\n", err)
-			} else {
-				fmt.Printf("Executable property updated successfully!\n")
+			// Update executable property directly
+			for _, ex := range pkg.Executable {
+				for _, prop := range ex.Property {
+					if prop.NameAttr != nil && *prop.NameAttr == "Description" {
+						prop.Value = "Updated via UpdateProperty"
+					}
+				}
 			}
+			fmt.Printf("Executable property updated successfully!\n")
 		} else {
 			fmt.Printf("No named executables found\n")
 		}
@@ -190,8 +217,11 @@ func main() {
 
 	// Save the updated package
 	outputFile := filename + ".updated.dtsx"
-	err = dtsx.MarshalToFile(outputFile, pkg)
+	data, err := dtsx.Marshal(pkg)
 	if err != nil {
+		log.Fatalf("Error serializing updated package: %v", err)
+	}
+	if err := os.WriteFile(outputFile, data, 0644); err != nil {
 		log.Fatalf("Error saving updated package: %v", err)
 	}
 

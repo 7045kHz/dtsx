@@ -16,6 +16,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/7045kHz/dtsx"
 )
@@ -134,7 +135,13 @@ func main() {
 	fmt.Println("\n6. Saving ETL Package to File...")
 
 	outputFile := "built_etl_package.dtsx"
-	err := dtsx.MarshalToFile(outputFile, etlPackage)
+	data, err := dtsx.Marshal(etlPackage)
+	if err != nil {
+		log.Fatalf("Failed to serialize package: %v", err)
+	}
+	if err := os.WriteFile(outputFile, data, 0644); err != nil {
+		log.Fatalf("Failed to save package: %v", err)
+	}
 	if err != nil {
 		log.Fatalf("Failed to save package: %v", err)
 	}

@@ -1,0 +1,1095 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts" DTS:refId="Package" DTS:CreationDate="11/11/2024 8:19:54 AM" DTS:CreationName="Microsoft.Package" DTS:CreatorComputerName="T15P" DTS:CreatorName="RSYSLAB\U00001" DTS:Description="Takes product colors and saves as csv fia flatfile" DTS:DTSID="{ACAA6774-B7D0-4025-92EF-BB4F1FAE3A1D}" DTS:EnableConfig="True" DTS:ExecutableType="Microsoft.Package" DTS:LastModifiedProductVersion="16.0.5685.0" DTS:LocaleID="1033" DTS:ObjectName="ConfigFile" DTS:PackageType="5" DTS:VersionBuild="6" DTS:VersionGUID="{D0A24291-60BB-46A1-BF67-580DE02D530F}">
+  <DTS:Property DTS:Name="PackageFormatVersion">8</DTS:Property>
+  <DTS:ConnectionManagers>
+    <DTS:ConnectionManager DTS:refId="Package.ConnectionManagers[Flat File Connection Manager]" DTS:CreationName="FLATFILE" DTS:DTSID="{86AC08EF-6B77-4900-A6DD-16B4F8659056}" DTS:ObjectName="Flat File Connection Manager">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager DTS:ConnectionString="C:\Users\U00001\Desktop\configfile-out.csv"></DTS:ConnectionManager>
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+    <DTS:ConnectionManager DTS:refId="Package.ConnectionManagers[T15P.AdventureWorks2022]" DTS:CreationName="OLEDB" DTS:DTSID="{3FDA4275-7D16-4E7F-929D-73234691B5EA}" DTS:ObjectName="T15P.AdventureWorks2022">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager DTS:ConnectRetryCount="1" DTS:ConnectRetryInterval="5" DTS:ConnectionString="Data Source=T15P;Initial Catalog=AdventureWorks2022;Provider=SQLNCLI11.1;Integrated Security=SSPI;Application Name=SSIS-ConfigFile-{3FDA4275-7D16-4E7F-929D-73234691B5EA}T15P.AdventureWorks2022;Auto Translate=False;"></DTS:ConnectionManager>
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+  </DTS:ConnectionManagers>
+  <DTS:Variables>
+    <DTS:Variable DTS:Namespace="User" DTS:ObjectName="Color">
+      <DTS:VariableValue DTS:DataType="8">Silver</DTS:VariableValue>
+    </DTS:Variable>
+  </DTS:Variables>
+  <DTS:Executables>
+    <DTS:Executable DTS:refId="Package\production_product_color_to_csv" DTS:ExecutableType="Microsoft.Pipeline" DTS:ObjectName="production_product_color_to_csv" DTS:CreationName="Microsoft.Pipeline" DTS:DTSID="{084CD22C-9D31-41EF-86FB-FA6374A01A49}">
+      <DTS:ObjectData>
+        <pipeline>
+          <components>
+            <component DTS:name="Flat File Destination" DTS:componentClassID="Microsoft.FlatFileDestination" DTS:description="Flat File Destination" DTS:localeId="1033" DTS:version="1" DTS:contactInfo="Flat File Destination;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;1">
+              <properties>
+                <property dataType="System.Boolean" description="Specifies whether the data will overwrite or append to the destination file." name="Overwrite">true</property>
+                <property dataType="System.Null" description="Specifies the text to write to the destination file before any data is written." expressionType="Notify" name="Header"></property>
+                <property dataType="System.Boolean" description="When text qualifier is enabled, specifies whether the text qualifier in the data written to the destination file will be escaped or not." name="EscapeQualifier">false</property>
+              </properties>
+              <connections>
+                <connection DTS:name="FlatFileConnection" DTS:connectionManagerID="Package.ConnectionManagers[Flat File Connection Manager]"></connection>
+              </connections>
+              <inputs>
+                <input DTS:name="Flat File Destination Input" DTS:hasSideEffects="true">
+                  <inputColumns>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ProductID]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductID]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Name]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Name]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ProductNumber]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductNumber]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[MakeFlag]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[MakeFlag]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[FinishedGoodsFlag]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[FinishedGoodsFlag]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Color]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Color]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[SafetyStockLevel]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[SafetyStockLevel]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ReorderPoint]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ReorderPoint]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[StandardCost]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[StandardCost]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ListPrice]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ListPrice]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Size]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Size]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[SizeUnitMeasureCode]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[SizeUnitMeasureCode]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[WeightUnitMeasureCode]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[WeightUnitMeasureCode]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Weight]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Weight]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[DaysToManufacture]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[DaysToManufacture]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ProductLine]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductLine]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Class]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Class]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Style]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Style]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ProductSubcategoryID]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductSubcategoryID]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ProductModelID]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductModelID]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[SellStartDate]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[SellStartDate]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[SellEndDate]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[SellEndDate]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[DiscontinuedDate]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[DiscontinuedDate]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[rowguid]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[rowguid]"></inputColumn>
+                    <inputColumn DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ModifiedDate]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ModifiedDate]"></inputColumn>
+                  </inputColumns>
+                  <externalMetadataColumns DTS:isUsed="True">
+                    <externalMetadataColumn DTS:name="ProductID" DTS:dataType="i4"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="Name" DTS:length="50" DTS:dataType="wstr"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="ProductNumber" DTS:length="25" DTS:dataType="wstr"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="MakeFlag" DTS:dataType="bool"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="FinishedGoodsFlag" DTS:dataType="bool"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="Color" DTS:length="15" DTS:dataType="wstr"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="SafetyStockLevel" DTS:dataType="i2"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="ReorderPoint" DTS:dataType="i2"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="StandardCost" DTS:dataType="cy"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="ListPrice" DTS:dataType="cy"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="Size" DTS:length="5" DTS:dataType="wstr"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="SizeUnitMeasureCode" DTS:length="3" DTS:dataType="wstr"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="WeightUnitMeasureCode" DTS:length="3" DTS:dataType="wstr"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="Weight" DTS:precision="8" DTS:scale="2" DTS:dataType="numeric"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="DaysToManufacture" DTS:dataType="i4"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="ProductLine" DTS:length="2" DTS:dataType="wstr"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="Class" DTS:length="2" DTS:dataType="wstr"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="Style" DTS:length="2" DTS:dataType="wstr"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="ProductSubcategoryID" DTS:dataType="i4"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="ProductModelID" DTS:dataType="i4"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="SellStartDate" DTS:dataType="dbTimeStamp"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="SellEndDate" DTS:dataType="dbTimeStamp"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="DiscontinuedDate" DTS:dataType="dbTimeStamp"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="rowguid" DTS:dataType="guid"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="ModifiedDate" DTS:dataType="dbTimeStamp"></externalMetadataColumn>
+                  </externalMetadataColumns>
+                </input>
+              </inputs>
+            </component>
+            <component DTS:name="get_colors_all" DTS:componentClassID="Microsoft.OLEDBSource" DTS:description="OLE DB Source" DTS:usesDispositions="true" DTS:version="7" DTS:contactInfo="OLE DB Source;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;7">
+              <properties>
+                <property dataType="System.Int32" description="The number of seconds before a command times out.  A value of 0 indicates an infinite time-out." name="CommandTimeout">0</property>
+                <property dataType="System.String" description="Specifies the name of the database object used to open a rowset." name="OpenRowset"></property>
+                <property dataType="System.String" description="Specifies the variable that contains the name of the database object used to open a rowset." name="OpenRowsetVariable"></property>
+                <property dataType="System.String" description="The SQL command to be executed." UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor" name="SqlCommand">select * from production.product where color=&#39;Blue&#39;</property>
+                <property dataType="System.String" description="The variable that contains the SQL command to be executed." name="SqlCommandVariable"></property>
+                <property dataType="System.Int32" description="Specifies the column code page to use when code page information is unavailable from the data source." name="DefaultCodePage">1252</property>
+                <property dataType="System.Boolean" description="Forces the use of the DefaultCodePage property value when describing character data." name="AlwaysUseDefaultCodePage">false</property>
+                <property dataType="System.Int32" description="Specifies the mode used to access the database." typeConverter="AccessMode" name="AccessMode">2</property>
+                <property dataType="System.String" description="The mappings between the parameters in the SQL command and variables." name="ParameterMapping">&#34;Parameter0:Input&#34;,{CED2D119-29E2-4453-A199-9377C9E54D88};</property>
+              </properties>
+              <connections>
+                <connection DTS:name="OleDbConnection" DTS:description="The OLE DB runtime connection used to access the database." DTS:connectionManagerID="Package.ConnectionManagers[T15P.AdventureWorks2022]"></connection>
+              </connections>
+              <outputs>
+                <output DTS:name="OLE DB Source Output">
+                  <outputColumns>
+                    <outputColumn DTS:name="ProductID" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ProductID]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductID]" DTS:dataType="i4"></outputColumn>
+                    <outputColumn DTS:name="Name" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[Name]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Name]" DTS:length="50" DTS:dataType="wstr"></outputColumn>
+                    <outputColumn DTS:name="ProductNumber" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ProductNumber]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductNumber]" DTS:length="25" DTS:dataType="wstr"></outputColumn>
+                    <outputColumn DTS:name="MakeFlag" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[MakeFlag]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[MakeFlag]" DTS:dataType="bool"></outputColumn>
+                    <outputColumn DTS:name="FinishedGoodsFlag" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[FinishedGoodsFlag]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[FinishedGoodsFlag]" DTS:dataType="bool"></outputColumn>
+                    <outputColumn DTS:name="Color" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[Color]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Color]" DTS:length="15" DTS:dataType="wstr"></outputColumn>
+                    <outputColumn DTS:name="SafetyStockLevel" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[SafetyStockLevel]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[SafetyStockLevel]" DTS:dataType="i2"></outputColumn>
+                    <outputColumn DTS:name="ReorderPoint" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ReorderPoint]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ReorderPoint]" DTS:dataType="i2"></outputColumn>
+                    <outputColumn DTS:name="StandardCost" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[StandardCost]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[StandardCost]" DTS:dataType="cy"></outputColumn>
+                    <outputColumn DTS:name="ListPrice" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ListPrice]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ListPrice]" DTS:dataType="cy"></outputColumn>
+                    <outputColumn DTS:name="Size" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[Size]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Size]" DTS:length="5" DTS:dataType="wstr"></outputColumn>
+                    <outputColumn DTS:name="SizeUnitMeasureCode" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[SizeUnitMeasureCode]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[SizeUnitMeasureCode]" DTS:length="3" DTS:dataType="wstr"></outputColumn>
+                    <outputColumn DTS:name="WeightUnitMeasureCode" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[WeightUnitMeasureCode]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[WeightUnitMeasureCode]" DTS:length="3" DTS:dataType="wstr"></outputColumn>
+                    <outputColumn DTS:name="Weight" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[Weight]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Weight]" DTS:precision="8" DTS:scale="2" DTS:dataType="numeric"></outputColumn>
+                    <outputColumn DTS:name="DaysToManufacture" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[DaysToManufacture]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[DaysToManufacture]" DTS:dataType="i4"></outputColumn>
+                    <outputColumn DTS:name="ProductLine" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ProductLine]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductLine]" DTS:length="2" DTS:dataType="wstr"></outputColumn>
+                    <outputColumn DTS:name="Class" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[Class]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Class]" DTS:length="2" DTS:dataType="wstr"></outputColumn>
+                    <outputColumn DTS:name="Style" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[Style]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Style]" DTS:length="2" DTS:dataType="wstr"></outputColumn>
+                    <outputColumn DTS:name="ProductSubcategoryID" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ProductSubcategoryID]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductSubcategoryID]" DTS:dataType="i4"></outputColumn>
+                    <outputColumn DTS:name="ProductModelID" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ProductModelID]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductModelID]" DTS:dataType="i4"></outputColumn>
+                    <outputColumn DTS:name="SellStartDate" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[SellStartDate]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[SellStartDate]" DTS:dataType="dbTimeStamp"></outputColumn>
+                    <outputColumn DTS:name="SellEndDate" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[SellEndDate]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[SellEndDate]" DTS:dataType="dbTimeStamp"></outputColumn>
+                    <outputColumn DTS:name="DiscontinuedDate" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[DiscontinuedDate]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[DiscontinuedDate]" DTS:dataType="dbTimeStamp"></outputColumn>
+                    <outputColumn DTS:name="rowguid" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[rowguid]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[rowguid]" DTS:dataType="guid"></outputColumn>
+                    <outputColumn DTS:name="ModifiedDate" DTS:errorOrTruncationOperation="Conversion" DTS:errorRowDisposition="FailComponent" DTS:truncationRowDisposition="FailComponent" DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ModifiedDate]" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ModifiedDate]" DTS:dataType="dbTimeStamp"></outputColumn>
+                  </outputColumns>
+                  <externalMetadataColumns DTS:isUsed="True">
+                    <externalMetadataColumn DTS:name="ProductID" DTS:dataType="i4"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="Name" DTS:length="50" DTS:dataType="wstr"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="ProductNumber" DTS:length="25" DTS:dataType="wstr"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="MakeFlag" DTS:dataType="bool"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="FinishedGoodsFlag" DTS:dataType="bool"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="Color" DTS:length="15" DTS:dataType="wstr"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="SafetyStockLevel" DTS:dataType="i2"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="ReorderPoint" DTS:dataType="i2"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="StandardCost" DTS:dataType="cy"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="ListPrice" DTS:dataType="cy"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="Size" DTS:length="5" DTS:dataType="wstr"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="SizeUnitMeasureCode" DTS:length="3" DTS:dataType="wstr"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="WeightUnitMeasureCode" DTS:length="3" DTS:dataType="wstr"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="Weight" DTS:precision="8" DTS:scale="2" DTS:dataType="numeric"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="DaysToManufacture" DTS:dataType="i4"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="ProductLine" DTS:length="2" DTS:dataType="wstr"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="Class" DTS:length="2" DTS:dataType="wstr"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="Style" DTS:length="2" DTS:dataType="wstr"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="ProductSubcategoryID" DTS:dataType="i4"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="ProductModelID" DTS:dataType="i4"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="SellStartDate" DTS:dataType="dbTimeStamp"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="SellEndDate" DTS:dataType="dbTimeStamp"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="DiscontinuedDate" DTS:dataType="dbTimeStamp"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="rowguid" DTS:dataType="guid"></externalMetadataColumn>
+                    <externalMetadataColumn DTS:name="ModifiedDate" DTS:dataType="dbTimeStamp"></externalMetadataColumn>
+                  </externalMetadataColumns>
+                </output>
+                <output DTS:name="OLE DB Source Error Output" DTS:isErrorOut="true">
+                  <outputColumns>
+                    <outputColumn DTS:name="ProductID" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ProductID]" DTS:dataType="i4"></outputColumn>
+                    <outputColumn DTS:name="Name" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[Name]" DTS:length="50" DTS:dataType="wstr"></outputColumn>
+                    <outputColumn DTS:name="ProductNumber" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ProductNumber]" DTS:length="25" DTS:dataType="wstr"></outputColumn>
+                    <outputColumn DTS:name="MakeFlag" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[MakeFlag]" DTS:dataType="bool"></outputColumn>
+                    <outputColumn DTS:name="FinishedGoodsFlag" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[FinishedGoodsFlag]" DTS:dataType="bool"></outputColumn>
+                    <outputColumn DTS:name="Color" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[Color]" DTS:length="15" DTS:dataType="wstr"></outputColumn>
+                    <outputColumn DTS:name="SafetyStockLevel" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[SafetyStockLevel]" DTS:dataType="i2"></outputColumn>
+                    <outputColumn DTS:name="ReorderPoint" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ReorderPoint]" DTS:dataType="i2"></outputColumn>
+                    <outputColumn DTS:name="StandardCost" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[StandardCost]" DTS:dataType="cy"></outputColumn>
+                    <outputColumn DTS:name="ListPrice" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ListPrice]" DTS:dataType="cy"></outputColumn>
+                    <outputColumn DTS:name="Size" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[Size]" DTS:length="5" DTS:dataType="wstr"></outputColumn>
+                    <outputColumn DTS:name="SizeUnitMeasureCode" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[SizeUnitMeasureCode]" DTS:length="3" DTS:dataType="wstr"></outputColumn>
+                    <outputColumn DTS:name="WeightUnitMeasureCode" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[WeightUnitMeasureCode]" DTS:length="3" DTS:dataType="wstr"></outputColumn>
+                    <outputColumn DTS:name="Weight" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[Weight]" DTS:precision="8" DTS:scale="2" DTS:dataType="numeric"></outputColumn>
+                    <outputColumn DTS:name="DaysToManufacture" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[DaysToManufacture]" DTS:dataType="i4"></outputColumn>
+                    <outputColumn DTS:name="ProductLine" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ProductLine]" DTS:length="2" DTS:dataType="wstr"></outputColumn>
+                    <outputColumn DTS:name="Class" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[Class]" DTS:length="2" DTS:dataType="wstr"></outputColumn>
+                    <outputColumn DTS:name="Style" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[Style]" DTS:length="2" DTS:dataType="wstr"></outputColumn>
+                    <outputColumn DTS:name="ProductSubcategoryID" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ProductSubcategoryID]" DTS:dataType="i4"></outputColumn>
+                    <outputColumn DTS:name="ProductModelID" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ProductModelID]" DTS:dataType="i4"></outputColumn>
+                    <outputColumn DTS:name="SellStartDate" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[SellStartDate]" DTS:dataType="dbTimeStamp"></outputColumn>
+                    <outputColumn DTS:name="SellEndDate" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[SellEndDate]" DTS:dataType="dbTimeStamp"></outputColumn>
+                    <outputColumn DTS:name="DiscontinuedDate" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[DiscontinuedDate]" DTS:dataType="dbTimeStamp"></outputColumn>
+                    <outputColumn DTS:name="rowguid" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[rowguid]" DTS:dataType="guid"></outputColumn>
+                    <outputColumn DTS:name="ModifiedDate" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ModifiedDate]" DTS:dataType="dbTimeStamp"></outputColumn>
+                    <outputColumn DTS:name="ErrorCode" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ErrorCode]" DTS:dataType="i4" DTS:specialFlags="1"></outputColumn>
+                    <outputColumn DTS:name="ErrorColumn" DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ErrorColumn]" DTS:dataType="i4" DTS:specialFlags="2"></outputColumn>
+                  </outputColumns>
+                  <externalMetadataColumns></externalMetadataColumns>
+                </output>
+              </outputs>
+            </component>
+          </components>
+          <paths>
+            <path DTS:name="OLE DB Source Output" DTS:startId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output]" DTS:endId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input]"></path>
+          </paths>
+        </pipeline>
+        <pipeline
+          DTS:version="1">
+          <components>
+            <component
+              DTS:refId="Package\production_product_color_to_csv\Flat File Destination"
+              DTS:componentClassID="Microsoft.FlatFileDestination"
+              DTS:contactInfo="Flat File Destination;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;1"
+              DTS:description="Flat File Destination"
+              DTS:localeId="1033"
+              DTS:name="Flat File Destination"
+              DTS:version="1">
+              <properties>
+                <property dataType="System.Boolean"
+                  description="Specifies whether the data will overwrite or append to the destination file."
+                  name="Overwrite">true</property>
+                <property dataType="System.Null"
+                  description="Specifies the text to write to the destination file before any data is written."
+                  expressionType="Notify"
+                  name="Header" />
+                <property dataType="System.Boolean"
+                  description="When text qualifier is enabled, specifies whether the text qualifier in the data written to the destination file will be escaped or not."
+                  name="EscapeQualifier">false</property>
+              </properties>
+              <connections>
+                <connection
+                  DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Connections[FlatFileConnection]"
+                  DTS:connectionManagerID="Package.ConnectionManagers[Flat File Connection Manager]"
+                  DTS:connectionManagerRefId="Package.ConnectionManagers[Flat File Connection Manager]"
+                  DTS:name="FlatFileConnection" />
+              </connections>
+              <inputs>
+                <input
+                  DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input]"
+                  DTS:hasSideEffects="true"
+                  DTS:name="Flat File Destination Input">
+                  <inputColumns>
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[ProductID]"
+                      DTS:cachedDataType="i4"
+                      DTS:cachedName="ProductID"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ProductID]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductID]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[Name]"
+                      DTS:cachedDataType="wstr"
+                      DTS:cachedLength="50"
+                      DTS:cachedName="Name"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Name]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Name]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[ProductNumber]"
+                      DTS:cachedDataType="wstr"
+                      DTS:cachedLength="25"
+                      DTS:cachedName="ProductNumber"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ProductNumber]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductNumber]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[MakeFlag]"
+                      DTS:cachedDataType="bool"
+                      DTS:cachedName="MakeFlag"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[MakeFlag]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[MakeFlag]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[FinishedGoodsFlag]"
+                      DTS:cachedDataType="bool"
+                      DTS:cachedName="FinishedGoodsFlag"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[FinishedGoodsFlag]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[FinishedGoodsFlag]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[Color]"
+                      DTS:cachedDataType="wstr"
+                      DTS:cachedLength="15"
+                      DTS:cachedName="Color"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Color]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Color]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[SafetyStockLevel]"
+                      DTS:cachedDataType="i2"
+                      DTS:cachedName="SafetyStockLevel"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[SafetyStockLevel]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[SafetyStockLevel]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[ReorderPoint]"
+                      DTS:cachedDataType="i2"
+                      DTS:cachedName="ReorderPoint"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ReorderPoint]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ReorderPoint]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[StandardCost]"
+                      DTS:cachedDataType="cy"
+                      DTS:cachedName="StandardCost"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[StandardCost]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[StandardCost]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[ListPrice]"
+                      DTS:cachedDataType="cy"
+                      DTS:cachedName="ListPrice"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ListPrice]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ListPrice]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[Size]"
+                      DTS:cachedDataType="wstr"
+                      DTS:cachedLength="5"
+                      DTS:cachedName="Size"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Size]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Size]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[SizeUnitMeasureCode]"
+                      DTS:cachedDataType="wstr"
+                      DTS:cachedLength="3"
+                      DTS:cachedName="SizeUnitMeasureCode"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[SizeUnitMeasureCode]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[SizeUnitMeasureCode]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[WeightUnitMeasureCode]"
+                      DTS:cachedDataType="wstr"
+                      DTS:cachedLength="3"
+                      DTS:cachedName="WeightUnitMeasureCode"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[WeightUnitMeasureCode]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[WeightUnitMeasureCode]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[Weight]"
+                      DTS:cachedDataType="numeric"
+                      DTS:cachedName="Weight"
+                      DTS:cachedPrecision="8"
+                      DTS:cachedScale="2"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Weight]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Weight]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[DaysToManufacture]"
+                      DTS:cachedDataType="i4"
+                      DTS:cachedName="DaysToManufacture"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[DaysToManufacture]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[DaysToManufacture]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[ProductLine]"
+                      DTS:cachedDataType="wstr"
+                      DTS:cachedLength="2"
+                      DTS:cachedName="ProductLine"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ProductLine]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductLine]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[Class]"
+                      DTS:cachedDataType="wstr"
+                      DTS:cachedLength="2"
+                      DTS:cachedName="Class"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Class]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Class]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[Style]"
+                      DTS:cachedDataType="wstr"
+                      DTS:cachedLength="2"
+                      DTS:cachedName="Style"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Style]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Style]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[ProductSubcategoryID]"
+                      DTS:cachedDataType="i4"
+                      DTS:cachedName="ProductSubcategoryID"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ProductSubcategoryID]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductSubcategoryID]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[ProductModelID]"
+                      DTS:cachedDataType="i4"
+                      DTS:cachedName="ProductModelID"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ProductModelID]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductModelID]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[SellStartDate]"
+                      DTS:cachedDataType="dbTimeStamp"
+                      DTS:cachedName="SellStartDate"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[SellStartDate]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[SellStartDate]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[SellEndDate]"
+                      DTS:cachedDataType="dbTimeStamp"
+                      DTS:cachedName="SellEndDate"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[SellEndDate]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[SellEndDate]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[DiscontinuedDate]"
+                      DTS:cachedDataType="dbTimeStamp"
+                      DTS:cachedName="DiscontinuedDate"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[DiscontinuedDate]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[DiscontinuedDate]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[rowguid]"
+                      DTS:cachedDataType="guid"
+                      DTS:cachedName="rowguid"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[rowguid]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[rowguid]" />
+                    <inputColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].Columns[ModifiedDate]"
+                      DTS:cachedDataType="dbTimeStamp"
+                      DTS:cachedName="ModifiedDate"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ModifiedDate]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ModifiedDate]" />
+                  </inputColumns>
+                  <externalMetadataColumns
+                    DTS:isUsed="True">
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ProductID]"
+                      DTS:dataType="i4"
+                      DTS:name="ProductID" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Name]"
+                      DTS:dataType="wstr"
+                      DTS:length="50"
+                      DTS:name="Name" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ProductNumber]"
+                      DTS:dataType="wstr"
+                      DTS:length="25"
+                      DTS:name="ProductNumber" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[MakeFlag]"
+                      DTS:dataType="bool"
+                      DTS:name="MakeFlag" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[FinishedGoodsFlag]"
+                      DTS:dataType="bool"
+                      DTS:name="FinishedGoodsFlag" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Color]"
+                      DTS:dataType="wstr"
+                      DTS:length="15"
+                      DTS:name="Color" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[SafetyStockLevel]"
+                      DTS:dataType="i2"
+                      DTS:name="SafetyStockLevel" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ReorderPoint]"
+                      DTS:dataType="i2"
+                      DTS:name="ReorderPoint" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[StandardCost]"
+                      DTS:dataType="cy"
+                      DTS:name="StandardCost" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ListPrice]"
+                      DTS:dataType="cy"
+                      DTS:name="ListPrice" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Size]"
+                      DTS:dataType="wstr"
+                      DTS:length="5"
+                      DTS:name="Size" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[SizeUnitMeasureCode]"
+                      DTS:dataType="wstr"
+                      DTS:length="3"
+                      DTS:name="SizeUnitMeasureCode" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[WeightUnitMeasureCode]"
+                      DTS:dataType="wstr"
+                      DTS:length="3"
+                      DTS:name="WeightUnitMeasureCode" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Weight]"
+                      DTS:dataType="numeric"
+                      DTS:name="Weight"
+                      DTS:precision="8"
+                      DTS:scale="2" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[DaysToManufacture]"
+                      DTS:dataType="i4"
+                      DTS:name="DaysToManufacture" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ProductLine]"
+                      DTS:dataType="wstr"
+                      DTS:length="2"
+                      DTS:name="ProductLine" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Class]"
+                      DTS:dataType="wstr"
+                      DTS:length="2"
+                      DTS:name="Class" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Style]"
+                      DTS:dataType="wstr"
+                      DTS:length="2"
+                      DTS:name="Style" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ProductSubcategoryID]"
+                      DTS:dataType="i4"
+                      DTS:name="ProductSubcategoryID" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ProductModelID]"
+                      DTS:dataType="i4"
+                      DTS:name="ProductModelID" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[SellStartDate]"
+                      DTS:dataType="dbTimeStamp"
+                      DTS:name="SellStartDate" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[SellEndDate]"
+                      DTS:dataType="dbTimeStamp"
+                      DTS:name="SellEndDate" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[DiscontinuedDate]"
+                      DTS:dataType="dbTimeStamp"
+                      DTS:name="DiscontinuedDate" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[rowguid]"
+                      DTS:dataType="guid"
+                      DTS:name="rowguid" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ModifiedDate]"
+                      DTS:dataType="dbTimeStamp"
+                      DTS:name="ModifiedDate" />
+                  </externalMetadataColumns>
+                </input>
+              </inputs>
+            </component>
+            <component
+              DTS:refId="Package\production_product_color_to_csv\get_colors_all"
+              DTS:componentClassID="Microsoft.OLEDBSource"
+              DTS:contactInfo="OLE DB Source;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;7"
+              DTS:description="OLE DB Source"
+              DTS:name="get_colors_all"
+              DTS:usesDispositions="true"
+              DTS:version="7">
+              <properties>
+                <property dataType="System.Int32"
+                  description="The number of seconds before a command times out.  A value of 0 indicates an infinite time-out."
+                  name="CommandTimeout">0</property>
+                <property dataType="System.String"
+                  description="Specifies the name of the database object used to open a rowset."
+                  name="OpenRowset"></property>
+                <property dataType="System.String"
+                  description="Specifies the variable that contains the name of the database object used to open a rowset."
+                  name="OpenRowsetVariable"></property>
+                <property dataType="System.String"
+                  description="The SQL command to be executed."
+                  name="SqlCommand"
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor">select * from production.product where color=?</property>
+                <property dataType="System.String"
+                  description="The variable that contains the SQL command to be executed."
+                  name="SqlCommandVariable"></property>
+                <property dataType="System.Int32"
+                  description="Specifies the column code page to use when code page information is unavailable from the data source."
+                  name="DefaultCodePage">1252</property>
+                <property dataType="System.Boolean"
+                  description="Forces the use of the DefaultCodePage property value when describing character data."
+                  name="AlwaysUseDefaultCodePage">false</property>
+                <property dataType="System.Int32"
+                  description="Specifies the mode used to access the database."
+                  name="AccessMode"
+                  typeConverter="AccessMode">2</property>
+                <property dataType="System.String"
+                  description="The mappings between the parameters in the SQL command and variables."
+                  name="ParameterMapping">"Parameter0:Input",{CED2D119-29E2-4453-A199-9377C9E54D88};</property>
+              </properties>
+              <connections>
+                <connection
+                  DTS:refId="Package\production_product_color_to_csv\get_colors_all.Connections[OleDbConnection]"
+                  DTS:connectionManagerID="Package.ConnectionManagers[T15P.AdventureWorks2022]"
+                  DTS:connectionManagerRefId="Package.ConnectionManagers[T15P.AdventureWorks2022]"
+                  DTS:description="The OLE DB runtime connection used to access the database."
+                  DTS:name="OleDbConnection" />
+              </connections>
+              <outputs>
+                <output
+                  DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output]"
+                  DTS:name="OLE DB Source Output">
+                  <outputColumns>
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductID]"
+                      DTS:dataType="i4"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ProductID]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductID]"
+                      DTS:name="ProductID"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Name]"
+                      DTS:dataType="wstr"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[Name]"
+                      DTS:length="50"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Name]"
+                      DTS:name="Name"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductNumber]"
+                      DTS:dataType="wstr"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ProductNumber]"
+                      DTS:length="25"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductNumber]"
+                      DTS:name="ProductNumber"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[MakeFlag]"
+                      DTS:dataType="bool"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[MakeFlag]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[MakeFlag]"
+                      DTS:name="MakeFlag"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[FinishedGoodsFlag]"
+                      DTS:dataType="bool"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[FinishedGoodsFlag]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[FinishedGoodsFlag]"
+                      DTS:name="FinishedGoodsFlag"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Color]"
+                      DTS:dataType="wstr"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[Color]"
+                      DTS:length="15"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Color]"
+                      DTS:name="Color"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[SafetyStockLevel]"
+                      DTS:dataType="i2"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[SafetyStockLevel]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[SafetyStockLevel]"
+                      DTS:name="SafetyStockLevel"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ReorderPoint]"
+                      DTS:dataType="i2"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ReorderPoint]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ReorderPoint]"
+                      DTS:name="ReorderPoint"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[StandardCost]"
+                      DTS:dataType="cy"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[StandardCost]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[StandardCost]"
+                      DTS:name="StandardCost"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ListPrice]"
+                      DTS:dataType="cy"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ListPrice]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ListPrice]"
+                      DTS:name="ListPrice"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Size]"
+                      DTS:dataType="wstr"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[Size]"
+                      DTS:length="5"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Size]"
+                      DTS:name="Size"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[SizeUnitMeasureCode]"
+                      DTS:dataType="wstr"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[SizeUnitMeasureCode]"
+                      DTS:length="3"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[SizeUnitMeasureCode]"
+                      DTS:name="SizeUnitMeasureCode"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[WeightUnitMeasureCode]"
+                      DTS:dataType="wstr"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[WeightUnitMeasureCode]"
+                      DTS:length="3"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[WeightUnitMeasureCode]"
+                      DTS:name="WeightUnitMeasureCode"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Weight]"
+                      DTS:dataType="numeric"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[Weight]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Weight]"
+                      DTS:name="Weight"
+                      DTS:precision="8"
+                      DTS:scale="2"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[DaysToManufacture]"
+                      DTS:dataType="i4"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[DaysToManufacture]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[DaysToManufacture]"
+                      DTS:name="DaysToManufacture"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductLine]"
+                      DTS:dataType="wstr"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ProductLine]"
+                      DTS:length="2"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductLine]"
+                      DTS:name="ProductLine"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Class]"
+                      DTS:dataType="wstr"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[Class]"
+                      DTS:length="2"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Class]"
+                      DTS:name="Class"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Style]"
+                      DTS:dataType="wstr"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[Style]"
+                      DTS:length="2"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[Style]"
+                      DTS:name="Style"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductSubcategoryID]"
+                      DTS:dataType="i4"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ProductSubcategoryID]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductSubcategoryID]"
+                      DTS:name="ProductSubcategoryID"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductModelID]"
+                      DTS:dataType="i4"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ProductModelID]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ProductModelID]"
+                      DTS:name="ProductModelID"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[SellStartDate]"
+                      DTS:dataType="dbTimeStamp"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[SellStartDate]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[SellStartDate]"
+                      DTS:name="SellStartDate"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[SellEndDate]"
+                      DTS:dataType="dbTimeStamp"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[SellEndDate]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[SellEndDate]"
+                      DTS:name="SellEndDate"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[DiscontinuedDate]"
+                      DTS:dataType="dbTimeStamp"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[DiscontinuedDate]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[DiscontinuedDate]"
+                      DTS:name="DiscontinuedDate"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[rowguid]"
+                      DTS:dataType="guid"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[rowguid]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[rowguid]"
+                      DTS:name="rowguid"
+                      DTS:truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ModifiedDate]"
+                      DTS:dataType="dbTimeStamp"
+                      DTS:errorOrTruncationOperation="Conversion"
+                      DTS:errorRowDisposition="FailComponent"
+                      DTS:externalMetadataColumnId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ModifiedDate]"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].Columns[ModifiedDate]"
+                      DTS:name="ModifiedDate"
+                      DTS:truncationRowDisposition="FailComponent" />
+                  </outputColumns>
+                  <externalMetadataColumns
+                    DTS:isUsed="True">
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ProductID]"
+                      DTS:dataType="i4"
+                      DTS:name="ProductID" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[Name]"
+                      DTS:dataType="wstr"
+                      DTS:length="50"
+                      DTS:name="Name" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ProductNumber]"
+                      DTS:dataType="wstr"
+                      DTS:length="25"
+                      DTS:name="ProductNumber" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[MakeFlag]"
+                      DTS:dataType="bool"
+                      DTS:name="MakeFlag" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[FinishedGoodsFlag]"
+                      DTS:dataType="bool"
+                      DTS:name="FinishedGoodsFlag" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[Color]"
+                      DTS:dataType="wstr"
+                      DTS:length="15"
+                      DTS:name="Color" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[SafetyStockLevel]"
+                      DTS:dataType="i2"
+                      DTS:name="SafetyStockLevel" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ReorderPoint]"
+                      DTS:dataType="i2"
+                      DTS:name="ReorderPoint" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[StandardCost]"
+                      DTS:dataType="cy"
+                      DTS:name="StandardCost" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ListPrice]"
+                      DTS:dataType="cy"
+                      DTS:name="ListPrice" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[Size]"
+                      DTS:dataType="wstr"
+                      DTS:length="5"
+                      DTS:name="Size" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[SizeUnitMeasureCode]"
+                      DTS:dataType="wstr"
+                      DTS:length="3"
+                      DTS:name="SizeUnitMeasureCode" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[WeightUnitMeasureCode]"
+                      DTS:dataType="wstr"
+                      DTS:length="3"
+                      DTS:name="WeightUnitMeasureCode" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[Weight]"
+                      DTS:dataType="numeric"
+                      DTS:name="Weight"
+                      DTS:precision="8"
+                      DTS:scale="2" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[DaysToManufacture]"
+                      DTS:dataType="i4"
+                      DTS:name="DaysToManufacture" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ProductLine]"
+                      DTS:dataType="wstr"
+                      DTS:length="2"
+                      DTS:name="ProductLine" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[Class]"
+                      DTS:dataType="wstr"
+                      DTS:length="2"
+                      DTS:name="Class" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[Style]"
+                      DTS:dataType="wstr"
+                      DTS:length="2"
+                      DTS:name="Style" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ProductSubcategoryID]"
+                      DTS:dataType="i4"
+                      DTS:name="ProductSubcategoryID" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ProductModelID]"
+                      DTS:dataType="i4"
+                      DTS:name="ProductModelID" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[SellStartDate]"
+                      DTS:dataType="dbTimeStamp"
+                      DTS:name="SellStartDate" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[SellEndDate]"
+                      DTS:dataType="dbTimeStamp"
+                      DTS:name="SellEndDate" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[DiscontinuedDate]"
+                      DTS:dataType="dbTimeStamp"
+                      DTS:name="DiscontinuedDate" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[rowguid]"
+                      DTS:dataType="guid"
+                      DTS:name="rowguid" />
+                    <externalMetadataColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output].ExternalColumns[ModifiedDate]"
+                      DTS:dataType="dbTimeStamp"
+                      DTS:name="ModifiedDate" />
+                  </externalMetadataColumns>
+                </output>
+                <output
+                  DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output]"
+                  DTS:isErrorOut="true"
+                  DTS:name="OLE DB Source Error Output">
+                  <outputColumns>
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ProductID]"
+                      DTS:dataType="i4"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ProductID]"
+                      DTS:name="ProductID" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[Name]"
+                      DTS:dataType="wstr"
+                      DTS:length="50"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[Name]"
+                      DTS:name="Name" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ProductNumber]"
+                      DTS:dataType="wstr"
+                      DTS:length="25"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ProductNumber]"
+                      DTS:name="ProductNumber" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[MakeFlag]"
+                      DTS:dataType="bool"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[MakeFlag]"
+                      DTS:name="MakeFlag" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[FinishedGoodsFlag]"
+                      DTS:dataType="bool"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[FinishedGoodsFlag]"
+                      DTS:name="FinishedGoodsFlag" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[Color]"
+                      DTS:dataType="wstr"
+                      DTS:length="15"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[Color]"
+                      DTS:name="Color" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[SafetyStockLevel]"
+                      DTS:dataType="i2"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[SafetyStockLevel]"
+                      DTS:name="SafetyStockLevel" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ReorderPoint]"
+                      DTS:dataType="i2"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ReorderPoint]"
+                      DTS:name="ReorderPoint" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[StandardCost]"
+                      DTS:dataType="cy"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[StandardCost]"
+                      DTS:name="StandardCost" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ListPrice]"
+                      DTS:dataType="cy"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ListPrice]"
+                      DTS:name="ListPrice" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[Size]"
+                      DTS:dataType="wstr"
+                      DTS:length="5"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[Size]"
+                      DTS:name="Size" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[SizeUnitMeasureCode]"
+                      DTS:dataType="wstr"
+                      DTS:length="3"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[SizeUnitMeasureCode]"
+                      DTS:name="SizeUnitMeasureCode" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[WeightUnitMeasureCode]"
+                      DTS:dataType="wstr"
+                      DTS:length="3"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[WeightUnitMeasureCode]"
+                      DTS:name="WeightUnitMeasureCode" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[Weight]"
+                      DTS:dataType="numeric"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[Weight]"
+                      DTS:name="Weight"
+                      DTS:precision="8"
+                      DTS:scale="2" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[DaysToManufacture]"
+                      DTS:dataType="i4"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[DaysToManufacture]"
+                      DTS:name="DaysToManufacture" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ProductLine]"
+                      DTS:dataType="wstr"
+                      DTS:length="2"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ProductLine]"
+                      DTS:name="ProductLine" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[Class]"
+                      DTS:dataType="wstr"
+                      DTS:length="2"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[Class]"
+                      DTS:name="Class" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[Style]"
+                      DTS:dataType="wstr"
+                      DTS:length="2"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[Style]"
+                      DTS:name="Style" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ProductSubcategoryID]"
+                      DTS:dataType="i4"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ProductSubcategoryID]"
+                      DTS:name="ProductSubcategoryID" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ProductModelID]"
+                      DTS:dataType="i4"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ProductModelID]"
+                      DTS:name="ProductModelID" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[SellStartDate]"
+                      DTS:dataType="dbTimeStamp"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[SellStartDate]"
+                      DTS:name="SellStartDate" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[SellEndDate]"
+                      DTS:dataType="dbTimeStamp"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[SellEndDate]"
+                      DTS:name="SellEndDate" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[DiscontinuedDate]"
+                      DTS:dataType="dbTimeStamp"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[DiscontinuedDate]"
+                      DTS:name="DiscontinuedDate" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[rowguid]"
+                      DTS:dataType="guid"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[rowguid]"
+                      DTS:name="rowguid" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ModifiedDate]"
+                      DTS:dataType="dbTimeStamp"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ModifiedDate]"
+                      DTS:name="ModifiedDate" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ErrorCode]"
+                      DTS:dataType="i4"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ErrorCode]"
+                      DTS:name="ErrorCode"
+                      DTS:specialFlags="1" />
+                    <outputColumn
+                      DTS:refId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ErrorColumn]"
+                      DTS:dataType="i4"
+                      DTS:lineageId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Error Output].Columns[ErrorColumn]"
+                      DTS:name="ErrorColumn"
+                      DTS:specialFlags="2" />
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+              </outputs>
+            </component>
+          </components>
+          <paths>
+            <path
+              DTS:refId="Package\production_product_color_to_csv.Paths[OLE DB Source Output]"
+              DTS:endId="Package\production_product_color_to_csv\Flat File Destination.Inputs[Flat File Destination Input]"
+              DTS:name="OLE DB Source Output"
+              DTS:startId="Package\production_product_color_to_csv\get_colors_all.Outputs[OLE DB Source Output]" />
+          </paths>
+        </pipeline>
+      
+      </DTS:ObjectData>
+    </DTS:Executable>
+  </DTS:Executables>
+</DTS:Executable>

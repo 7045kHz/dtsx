@@ -654,10 +654,10 @@ type Test struct {
 
 // PipelineComponentPropertyType ...
 type PipelineComponentPropertyType struct {
-	DTSPipelineComponentPropertyAttributeGroup *PipelineComponentPropertyAttributeGroup
-	NameAttr                                   *string                             `xml:"name,attr"`
-	ArrayElements                              *PipelineComponentArrayElementsType `xml:"arrayElements"`
-	Value                                      string                              `xml:",chardata"`
+	*PipelineComponentPropertyAttributeGroup
+	NameAttr      *string                             `xml:"name,attr"`
+	ArrayElements *PipelineComponentArrayElementsType `xml:"arrayElements"`
+	Value         string                              `xml:",chardata"`
 }
 
 // PipelineComponentPropertyAttributeGroup ...
@@ -676,16 +676,16 @@ type PipelineComponentPropertyAttributeGroup struct {
 
 // PipelineComponentOutputPropertyType ...
 type PipelineComponentOutputPropertyType struct {
-	DTSPipelineComponentPropertyAttributeGroup *PipelineComponentPropertyAttributeGroup
-	NameAttr                                   *string                             `xml:"name,attr"`
-	ArrayElements                              *PipelineComponentArrayElementsType `xml:"arrayElements"`
+	*PipelineComponentPropertyAttributeGroup
+	NameAttr      *string                             `xml:"name,attr"`
+	ArrayElements *PipelineComponentArrayElementsType `xml:"arrayElements"`
 }
 
 // PipelineComponentInputPropertyType ...
 type PipelineComponentInputPropertyType struct {
-	DTSPipelineComponentPropertyAttributeGroup *PipelineComponentPropertyAttributeGroup
-	NameAttr                                   *string                             `xml:"name,attr"`
-	ArrayElements                              *PipelineComponentArrayElementsType `xml:"arrayElements"`
+	*PipelineComponentPropertyAttributeGroup
+	NameAttr      *string                             `xml:"name,attr"`
+	ArrayElements *PipelineComponentArrayElementsType `xml:"arrayElements"`
 }
 
 // PipelineComponentArrayElementsType ...
@@ -737,10 +737,10 @@ type PipelineComponentConnectionType struct {
 
 // PipelineComponentInputType ...
 type PipelineComponentInputType struct {
-	DTSPipelineComponentInputOutputElementAttributeGroup *PipelineComponentInputOutputElementAttributeGroup
-	Properties                                           *PipelineComponentInputPropertiesType `xml:"properties"`
-	InputColumns                                         *PipelineComponentInputColumnsType    `xml:"inputColumns"`
-	ExternalMetadataColumns                              *PipelineComponentMetadataColumnsType `xml:"externalMetadataColumns"`
+	*PipelineComponentInputOutputElementAttributeGroup
+	Properties              *PipelineComponentInputPropertiesType `xml:"properties"`
+	InputColumns            *PipelineComponentInputColumnsType    `xml:"inputColumns"`
+	ExternalMetadataColumns *PipelineComponentMetadataColumnsType `xml:"externalMetadataColumns"`
 }
 
 // PipelineComponentInputColumnsType ...
@@ -750,10 +750,10 @@ type PipelineComponentInputColumnsType struct {
 
 // PipelineComponentInputColumnType ...
 type PipelineComponentInputColumnType struct {
-	DTSPipelineComponentAllColumnBaseAttributeGroup *PipelineComponentAllColumnBaseAttributeGroup
-	DTSPipelineComponentIOColumnBaseAttributeGroup  *PipelineComponentIOColumnBaseAttributeGroup
-	UsageTypeAttr                                   *string                                       `xml:"usageType,attr"`
-	Properties                                      []*PipelineComponentInputColumnPropertiesType `xml:"properties"`
+	*PipelineComponentAllColumnBaseAttributeGroup
+	*PipelineComponentIOColumnBaseAttributeGroup
+	UsageTypeAttr *string                                       `xml:"usageType,attr"`
+	Properties    []*PipelineComponentInputColumnPropertiesType `xml:"properties"`
 }
 
 // PipelineComponentInputColumnPropertiesType ...
@@ -763,8 +763,8 @@ type PipelineComponentInputColumnPropertiesType struct {
 
 // PipelineComponentInputColumnPropertyType ...
 type PipelineComponentInputColumnPropertyType struct {
-	DTSPipelineComponentPropertyAttributeGroup *PipelineComponentPropertyAttributeGroup
-	NameAttr                                   *string `xml:"name,attr"`
+	*PipelineComponentPropertyAttributeGroup
+	NameAttr *string `xml:"name,attr"`
 	*AnySimpleType
 }
 
@@ -775,8 +775,8 @@ type PipelineComponentOutputColumnPropertiesType struct {
 
 // PipelineComponentOutputColumnPropertyType ...
 type PipelineComponentOutputColumnPropertyType struct {
-	DTSPipelineComponentPropertyAttributeGroup *PipelineComponentPropertyAttributeGroup
-	NameAttr                                   *string `xml:"name,attr"`
+	*PipelineComponentPropertyAttributeGroup
+	NameAttr *string `xml:"name,attr"`
 	*AnySimpleType
 }
 
@@ -785,15 +785,15 @@ type PipelineComponentUsageTypeEnum string
 
 // PipelineComponentOutputType ...
 type PipelineComponentOutputType struct {
-	DTSPipelineComponentInputOutputElementAttributeGroup *PipelineComponentInputOutputElementAttributeGroup
-	ExclusionGroupAttr                                   *int                                   `xml:"exclusionGroup,attr"`
-	SynchronousInputIdAttr                               *string                                `xml:"synchronousInputId,attr"`
-	DeleteOutputOnPathDetachedAttr                       *bool                                  `xml:"deleteOutputOnPathDetached,attr"`
-	IsErrorOutAttr                                       *bool                                  `xml:"isErrorOut,attr"`
-	IsSortedAttr                                         *bool                                  `xml:"isSorted,attr"`
-	Properties                                           *PipelineComponentOutputPropertiesType `xml:"properties"`
-	OutputColumns                                        *PipelineComponentOutputColumnsType    `xml:"outputColumns"`
-	ExternalMetadataColumns                              *PipelineComponentMetadataColumnsType  `xml:"externalMetadataColumns"`
+	*PipelineComponentInputOutputElementAttributeGroup
+	ExclusionGroupAttr             *int                                   `xml:"exclusionGroup,attr"`
+	SynchronousInputIdAttr         *string                                `xml:"synchronousInputId,attr"`
+	DeleteOutputOnPathDetachedAttr *bool                                  `xml:"deleteOutputOnPathDetached,attr"`
+	IsErrorOutAttr                 *bool                                  `xml:"isErrorOut,attr"`
+	IsSortedAttr                   *bool                                  `xml:"isSorted,attr"`
+	Properties                     *PipelineComponentOutputPropertiesType `xml:"properties"`
+	OutputColumns                  *PipelineComponentOutputColumnsType    `xml:"outputColumns"`
+	ExternalMetadataColumns        *PipelineComponentMetadataColumnsType  `xml:"externalMetadataColumns"`
 }
 
 // PipelineComponentMetadataColumnsType ...
@@ -804,9 +804,9 @@ type PipelineComponentMetadataColumnsType struct {
 
 // PipelineComponentMetadataColumnType ...
 type PipelineComponentMetadataColumnType struct {
-	DTSPipelineComponentAllColumnBaseAttributeGroup  *PipelineComponentAllColumnBaseAttributeGroup
-	DTSPipelineComponentColumnExtendedAttributeGroup *PipelineComponentColumnExtendedAttributeGroup
-	Properties                                       *PipelineComponentMetadataColumnPropertiesType `xml:"properties"`
+	*PipelineComponentAllColumnBaseAttributeGroup
+	*PipelineComponentColumnExtendedAttributeGroup
+	Properties *PipelineComponentMetadataColumnPropertiesType `xml:"properties"`
 }
 
 // PipelineComponentMetadataColumnPropertiesType ...
@@ -816,8 +816,8 @@ type PipelineComponentMetadataColumnPropertiesType struct {
 
 // PipelineComponentMetadataColumnPropertyType ...
 type PipelineComponentMetadataColumnPropertyType struct {
-	DTSPipelineComponentPropertyAttributeGroup *PipelineComponentPropertyAttributeGroup
-	NameAttr                                   *string `xml:"name,attr"`
+	*PipelineComponentPropertyAttributeGroup
+	NameAttr *string `xml:"name,attr"`
 	*AnySimpleType
 }
 
@@ -841,7 +841,7 @@ type PipelineComponentAllColumnBaseAttributeGroup struct {
 	IdAttr             string `xml:"id,attr,omitempty"`
 	NameAttr           string `xml:"name,attr,omitempty"`
 	DescriptionAttr    string `xml:"description,attr,omitempty"`
-	MappedColumnIdAttr int    `xml:"mappedColumnId,attr,omitempty"`
+	MappedColumnIdAttr string `xml:"mappedColumnId,attr,omitempty"`
 }
 
 // PipelineComponentIOColumnBaseAttributeGroup ...
@@ -849,8 +849,8 @@ type PipelineComponentIOColumnBaseAttributeGroup struct {
 	ErrorOrTruncationOperationAttr string `xml:"errorOrTruncationOperation,attr,omitempty"`
 	ErrorRowDispositionAttr        string `xml:"errorRowDisposition,attr,omitempty"`
 	TruncationRowDispositionAttr   string `xml:"truncationRowDisposition,attr,omitempty"`
-	ExternalMetadataColumnIdAttr   int    `xml:"externalMetadataColumnId,attr,omitempty"`
-	LineageIdAttr                  int    `xml:"lineageId,attr,omitempty"`
+	ExternalMetadataColumnIdAttr   string `xml:"externalMetadataColumnId,attr,omitempty"`
+	LineageIdAttr                  string `xml:"lineageId,attr,omitempty"`
 }
 
 // PipelineComponentColumnExtendedAttributeGroup ...
@@ -869,13 +869,13 @@ type PipelineComponentOutputColumnsType struct {
 
 // PipelineComponentOutputColumnType ...
 type PipelineComponentOutputColumnType struct {
-	DTSPipelineComponentAllColumnBaseAttributeGroup  *PipelineComponentAllColumnBaseAttributeGroup
-	DTSPipelineComponentIOColumnBaseAttributeGroup   *PipelineComponentIOColumnBaseAttributeGroup
-	DTSPipelineComponentColumnExtendedAttributeGroup *PipelineComponentColumnExtendedAttributeGroup
-	SortKeyPositionAttr                              *int                                           `xml:"sortKeyPosition,attr"`
-	ComparisonFlagsAttr                              *int                                           `xml:"comparisonFlags,attr"`
-	SpecialFlagsAttr                                 *int                                           `xml:"specialFlags,attr"`
-	Properties                                       []*PipelineComponentOutputColumnPropertiesType `xml:"properties"`
+	*PipelineComponentAllColumnBaseAttributeGroup
+	*PipelineComponentIOColumnBaseAttributeGroup
+	*PipelineComponentColumnExtendedAttributeGroup
+	SortKeyPositionAttr *int                                           `xml:"sortKeyPosition,attr"`
+	ComparisonFlagsAttr *int                                           `xml:"comparisonFlags,attr"`
+	SpecialFlagsAttr    *int                                           `xml:"specialFlags,attr"`
+	Properties          []*PipelineComponentOutputColumnPropertiesType `xml:"properties"`
 }
 
 // PipelineComponentColumnDataTypeEnum ...
