@@ -317,13 +317,11 @@ for _, expr := range exprs {
 // Note: package-provided file-write helpers have been internalized to
 // disable direct package-managed file writes. Use `Marshal` and the
 // standard library (e.g., `os.WriteFile`) to persist packages.
-- `UnmarshalFromFile(filename string) (*Package, error)` - Read DTSX from file
-- `UnmarshalFromReader(r io.Reader) (*Package, error)` - Read DTSX from reader
-- `Unmarshal(data []byte) (*Package, error)` - Parse DTSX from bytes
-- `MarshalToFile(filename string, pkg *Package) error` - Write DTSX to file
-- `MarshalToWriter(w io.Writer, pkg *Package) error` - Write DTSX to writer
-- `Marshal(pkg *Package) ([]byte, error)` - Convert DTSX to bytes
-- `IsDTSXPackage(filename string) (*Package, bool)` - Load and validate DTSX file
+`UnmarshalFromFile(filename string) (*Package, error)` - Read DTSX from file
+`UnmarshalFromReader(r io.Reader) (*Package, error)` - Read DTSX from reader
+`Unmarshal(data []byte) (*Package, error)` - Parse DTSX from bytes
+`Marshal(pkg *Package) ([]byte, error)` - Convert DTSX to bytes
+`IsDTSXPackage(filename string) (*Package, bool)` - Load and validate DTSX file
 
 ### Execution Functions
 
