@@ -28,6 +28,7 @@ A comprehensive Go library for reading, writing, and analyzing DTSX (SQL Server 
 - **Utility Functions**: Convenient getters for connection names, variable values, executable names, and more
 - **Full schema support**: Generated from official SSIS XSD schemas with container element support
 - **Type-safe**: Strongly typed Go structures for all DTSX elements
+- **Public API (dtsx package)**: See [docs/API.md](docs/API.md) for a consolidated list of public methods, types and usage examples.
 
 ## Installation
 
@@ -314,6 +315,8 @@ for _, expr := range exprs {
 
 ## API Reference
 
+For a consolidated public API reference with usage examples, see [docs/API.md](docs/API.md).
+
 // Note: package-provided file-write helpers have been internalized to
 // disable direct package-managed file writes. Use `Marshal` and the
 // standard library (e.g., `os.WriteFile`) to persist packages.
@@ -398,6 +401,23 @@ The `Package` type represents a complete DTSX package with the following main co
 
 See the [examples](./examples) directory for complete working examples:
 
+- Per-symbol, consolidated examples: `examples/api_examples.go` — run with:
+
+```bash
+# Run from repository root
+go run examples/api_examples.go
+```
+
+This example demonstrates most exported symbols and writes a sample DTSX file named `output_sample.dtsx` in the current working directory when run.
+
+Regenerate the generated API doc:
+
+```bash
+# From the repository root
+go generate ./...
+```
+
+
 ```bash
 # Analyze package structure
 go run examples/analyze_dtsx.go path/to/your/package.dtsx
@@ -444,7 +464,7 @@ go test ./...
 
 ## Project Structure
 
-```
+```text
 .
 ├── dtsx.go                 # Main package with marshal/unmarshal functions, PackageParser, PrecedenceAnalyzer, PackageValidator
 ├── expression.go           # Advanced SSIS expression evaluator with caching
