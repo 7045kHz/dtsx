@@ -61,15 +61,7 @@ func main() {
 	if connections.Count > 0 {
 		connMgrs := connections.Results.([]*schema.ConnectionManagerType)
 		for i, cm := range connMgrs {
-			name := "unnamed"
-			for _, prop := range cm.Property {
-				if prop.NameAttr != nil && *prop.NameAttr == "ObjectName" {
-					if prop.PropertyElementBaseType != nil && prop.PropertyElementBaseType.AnySimpleType != nil {
-						name = prop.PropertyElementBaseType.AnySimpleType.Value
-					}
-					break
-				}
-			}
+			name := dtsx.GetConnectionName(cm)
 			fmt.Printf("%d. %s (%d properties)\n", i+1, name, len(cm.Property))
 		}
 	}
@@ -80,15 +72,7 @@ func main() {
 	if variables.Count > 0 {
 		vars := variables.Results.([]*schema.VariableType)
 		for i, variable := range vars {
-			name := "unnamed"
-			for _, prop := range variable.Property {
-				if prop.NameAttr != nil && *prop.NameAttr == "ObjectName" {
-					if prop.PropertyElementBaseType != nil && prop.PropertyElementBaseType.AnySimpleType != nil {
-						name = prop.PropertyElementBaseType.AnySimpleType.Value
-					}
-					break
-				}
-			}
+			name := dtsx.GetVariableName(variable)
 			fmt.Printf("%d. %s\n", i+1, name)
 		}
 	}
@@ -110,18 +94,16 @@ func main() {
 
 	// Show details of all executables
 	for i, exec := range allExecutables {
-		name := "unnamed"
+		name := dtsx.GetExecutableName(exec)
 		execType := exec.ExecutableTypeAttr
-		for _, prop := range exec.Property {
-			if prop.NameAttr != nil && *prop.NameAttr == "ObjectName" {
-				if prop.PropertyElementBaseType != nil && prop.PropertyElementBaseType.AnySimpleType != nil {
-					name = prop.PropertyElementBaseType.AnySimpleType.Value
-				}
-				break
-			}
-		}
 		fmt.Printf("%d. %s [%s]\n", i+1, name, execType)
 	}
+
+	// Execution Flow Analysis
+	fmt.Printf("\n--- Execution Flow Analysis ---\n")
+	analyzer := dtsx.NewPrecedenceAnalyzer(pkg)
+	flowDesc := analyzer.GetExecutionFlowDescription()
+	fmt.Print(flowDesc)
 
 	// Expressions - using new query method
 	expressions := pkg.GetExpressions()
@@ -129,12 +111,22 @@ func main() {
 	if expressions.Count > 0 {
 		exprs := expressions.Results.([]*dtsx.ExpressionInfo)
 		for i, expr := range exprs {
-			fmt.Printf("%d. [%s] %s\n", i+1, expr.Location, expr.Expression)
-			if expr.Name != "" {
-				fmt.Printf("   Property: %s\n", expr.Name)
+			details := dtsx.GetExpressionDetails(expr, pkg)
+			fmt.Printf("%d. [%s] %s\n", i+1, details.Location, details.Expression)
+			if details.Name != "" {
+				fmt.Printf("   Property: %s\n", details.Name)
 			}
-			if expr.Context != "" {
-				fmt.Printf("   Context: %s\n", expr.Context)
+			if details.Context != "" {
+				fmt.Printf("   Context: %s\n", details.Context)
+			}
+			if details.EvaluatedValue != "" {
+				fmt.Printf("   Evaluated: %s\n", details.EvaluatedValue)
+			}
+			if details.EvaluationError != "" {
+				fmt.Printf("   Error: %s\n", details.EvaluationError)
+			}
+			if len(details.Dependencies) > 0 {
+				fmt.Printf("   Dependencies: %v\n", details.Dependencies)
 			}
 		}
 	}

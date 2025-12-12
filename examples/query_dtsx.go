@@ -48,21 +48,14 @@ func main() {
 		vars := variables.Results.([]*schema.VariableType)
 		for i, v := range vars {
 			// Try to get variable name from attributes
-			varName := "unnamed"
-			if v.ObjectNameAttr != nil {
-				varName = *v.ObjectNameAttr
-			}
-			namespace := "User" // default
-			if v.NamespaceAttr != nil {
-				namespace = *v.NamespaceAttr
-			}
+			fullName := dtsx.GetVariableName(v)
 
-			fmt.Printf("   %d. %s::%s", i+1, namespace, varName)
+			fmt.Printf("   %d. %s", i+1, fullName)
 
 			// Show variable value if available
-			if v.VariableValue != nil && v.VariableValue.Value != "" {
+			value := dtsx.GetVariableValue(v)
+			if value != "" {
 				// Truncate long values for display
-				value := v.VariableValue.Value
 				if len(value) > 50 {
 					value = value[:47] + "..."
 				}
@@ -98,8 +91,8 @@ func main() {
 			fmt.Printf("   Variable '%s': Found", varName)
 
 			// Show variable value if available
-			if variable.VariableValue != nil && variable.VariableValue.Value != "" {
-				value := variable.VariableValue.Value
+			value := dtsx.GetVariableValue(variable)
+			if value != "" {
 				if len(value) > 30 {
 					value = value[:27] + "..."
 				}
@@ -149,9 +142,16 @@ func main() {
 	if expressions.Count > 0 {
 		exprs := expressions.Results.([]*dtsx.ExpressionInfo)
 		for i, expr := range exprs {
-			fmt.Printf("   %d. [%s] %s\n", i+1, expr.Location, expr.Expression)
-			if expr.Context != "" {
-				fmt.Printf("      Context: %s\n", expr.Context)
+			details := dtsx.GetExpressionDetails(expr, pkg)
+			fmt.Printf("   %d. [%s] %s\n", i+1, details.Location, details.Expression)
+			if details.Context != "" {
+				fmt.Printf("      Context: %s\n", details.Context)
+			}
+			if details.EvaluatedValue != "" {
+				fmt.Printf("      Evaluated: %s\n", details.EvaluatedValue)
+			}
+			if len(details.Dependencies) > 0 {
+				fmt.Printf("      Dependencies: %v\n", details.Dependencies)
 			}
 		}
 	}

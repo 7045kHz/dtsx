@@ -63,6 +63,12 @@ func main() {
 	}
 	fmt.Println()
 
+	// Get execution flow description
+	fmt.Println("=== Execution Flow Description ===")
+	flowDesc := analyzer.GetExecutionFlowDescription()
+	fmt.Print(flowDesc)
+	fmt.Println()
+
 	// Validate package
 	fmt.Println("=== Package Validation ===")
 	validator := dtsx.NewPackageValidator(pkg)

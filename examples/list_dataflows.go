@@ -44,11 +44,7 @@ func main() {
 
 	fmt.Printf("Found %d data flow(s) in %s:\n", len(dataFlows), filename)
 	for i, df := range dataFlows {
-		// Extract the data flow name from attributes
-		name := "unnamed"
-		if df.ObjectNameAttr != nil {
-			name = *df.ObjectNameAttr
-		}
+		name := dtsx.GetExecutableName(df)
 		fmt.Printf("%d. %s\n", i+1, name)
 	}
 }

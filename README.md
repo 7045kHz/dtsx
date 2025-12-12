@@ -19,14 +19,16 @@ A comprehensive Go library for reading, writing, and analyzing DTSX (SQL Server 
 - **Package Builder API**: Fluent API for programmatic package creation
 - **Comprehensive Validation**: Multi-level validation with error, warning, and info severities
 - **Dependency Analysis**: Graph-based analysis of package relationships and impact assessment
-- **Template System**: Reusable package templates for common ETL patterns
 - **Query API**: Convenient methods to analyze connections, variables, executables, and expressions
 - **Connection Analysis**: Comprehensive analysis of connection managers with drivers and dynamic properties
 - **SQL Extraction**: Extract SQL statements from control flow and dataflow tasks
-- **Execution Order Analysis**: Topological sorting and precedence constraint analysis
+- **Execution Order Analysis**: Topological sorting and precedence constraint analysis with execution flow descriptions
+- **Expression Details**: Detailed expression analysis with evaluation results and dependency tracking
 - **Package Parser**: Centralized parsing with caching for performance
+- **Utility Functions**: Convenient getters for connection names, variable values, executable names, and more
 - **Full schema support**: Generated from official SSIS XSD schemas with container element support
 - **Type-safe**: Strongly typed Go structures for all DTSX elements
+- **Public API (dtsx package)**: See [docs/API.md](docs/API.md) for a consolidated list of public methods, types and usage examples.
 
 ## Installation
 
@@ -87,11 +89,12 @@ pkg, err := dtsx.UnmarshalFromReader(file)
 // Marshal to bytes
 data, err := dtsx.Marshal(pkg)
 
-// Write to file
-err := dtsx.MarshalToFile("output.dtsx", pkg)
+// Write to file using the standard library (the package intentionally
+// no longer exposes direct file-write helpers; write manually):
+// err := os.WriteFile("output.dtsx", data, 0644)
 
-// Write to io.Writer
-err := dtsx.MarshalToWriter(writer, pkg)
+// Or write to an io.Writer by writing `data` to the writer
+// (e.g., writer.Write(data))
 ```
 
 ## Advanced Features
@@ -186,8 +189,54 @@ for refId, order := range orders {
     fmt.Printf("%s: Order %d\n", refId, order)
 }
 
+// Get textual execution flow description
+flowDesc := analyzer.GetExecutionFlowDescription()
+fmt.Print(flowDesc)
+
 // Validate precedence constraints
 errors := analyzer.ValidateConstraints()
+```
+
+### Expression Details Analysis
+
+Get comprehensive information about expressions including evaluation results and dependencies:
+
+```go
+expressions := pkg.GetExpressions()
+exprs := expressions.Results.([]*dtsx.ExpressionInfo)
+
+for _, expr := range exprs {
+    details := dtsx.GetExpressionDetails(expr, pkg)
+    fmt.Printf("Expression: %s\n", details.Expression)
+    fmt.Printf("  Location: %s\n", details.Location)
+    if details.EvaluatedValue != "" {
+        fmt.Printf("  Evaluated: %s\n", details.EvaluatedValue)
+    }
+    if len(details.Dependencies) > 0 {
+        fmt.Printf("  Dependencies: %v\n", details.Dependencies)
+    }
+}
+```
+
+### Utility Functions
+
+Convenient getter functions for common DTSX element properties:
+
+```go
+// Get connection manager details
+connName := dtsx.GetConnectionName(connectionManager)
+connString := dtsx.GetConnectionString(connectionManager)
+
+// Get variable details
+varName := dtsx.GetVariableName(variable)
+varValue := dtsx.GetVariableValue(variable)
+
+// Get executable details
+execName := dtsx.GetExecutableName(executable)
+
+// Get detailed expression analysis
+details := dtsx.GetExpressionDetails(exprInfo, pkg)
+fmt.Printf("Evaluated: %s, Dependencies: %v\n", details.EvaluatedValue, details.Dependencies)
 ```
 
 ### Enhanced Package Validation
@@ -201,16 +250,6 @@ errors := validator.Validate()
 for _, err := range errors {
     fmt.Printf("[%s] %s: %s\n", err.Severity, err.Path, err.Message)
 }
-```
-
-### Template System
-
-Use reusable package templates for common ETL patterns. See [TEMPLATES.md](TEMPLATES.md) for comprehensive documentation:
-
-```go
-registry := dtsx.GetDefaultTemplateRegistry()
-template := registry.Get("Basic ETL")
-pkg, err := template.Instantiate(params)
 ```
 
 ## Querying Packages
@@ -276,15 +315,16 @@ for _, expr := range exprs {
 
 ## API Reference
 
-### Core Functions
+For a consolidated public API reference with usage examples, see [docs/API.md](docs/API.md).
 
-- `UnmarshalFromFile(filename string) (*Package, error)` - Read DTSX from file
-- `UnmarshalFromReader(r io.Reader) (*Package, error)` - Read DTSX from reader
-- `Unmarshal(data []byte) (*Package, error)` - Parse DTSX from bytes
-- `MarshalToFile(filename string, pkg *Package) error` - Write DTSX to file
-- `MarshalToWriter(w io.Writer, pkg *Package) error` - Write DTSX to writer
-- `Marshal(pkg *Package) ([]byte, error)` - Convert DTSX to bytes
-- `IsDTSXPackage(filename string) (*Package, bool)` - Load and validate DTSX file
+// Note: package-provided file-write helpers have been internalized to
+// disable direct package-managed file writes. Use `Marshal` and the
+// standard library (e.g., `os.WriteFile`) to persist packages.
+`UnmarshalFromFile(filename string) (*Package, error)` - Read DTSX from file
+`UnmarshalFromReader(r io.Reader) (*Package, error)` - Read DTSX from reader
+`Unmarshal(data []byte) (*Package, error)` - Parse DTSX from bytes
+`Marshal(pkg *Package) ([]byte, error)` - Convert DTSX to bytes
+`IsDTSXPackage(filename string) (*Package, bool)` - Load and validate DTSX file
 
 ### Execution Functions
 
@@ -300,10 +340,9 @@ for _, expr := range exprs {
 
 ### Update Methods
 
-- `UpdateVariable(namespace, name, newValue string) error` - Update variable value
-- `UpdateConnectionString(connectionName, newConnectionString string) error` - Update connection string
-- `UpdateExpression(targetType, targetName, propertyName, newExpression string) error` - Update property expression
-- `UpdateProperty(targetType, targetName, propertyName, newValue string) error` - Update any property on package, variable, connection, or executable
+Note: Mutating helpers were removed from the public API. To programmatically
+modify packages, mutate the package structs directly (e.g., `pkg.Variables`,
+`pkg.ConnectionManagers`) or use internal functions within the package.
 
 ### Advanced Methods
 
@@ -329,6 +368,7 @@ for _, expr := range exprs {
 - `GetExecutionOrder(refId string) (int, error)` - Get execution order for task
 - `GetAllExecutionOrders() (map[string]int, error)` - Get all execution orders
 - `GetExecutableChain(refId string) ([]string, error)` - Get execution chain
+- `GetExecutionFlowDescription() string` - Get textual execution flow description
 - `ValidateConstraints() []error` - Validate precedence constraints
 
 ### PackageValidator Methods
@@ -343,13 +383,6 @@ for _, expr := range exprs {
 - `AddConnection(name, connectionType, connectionString string) *PackageBuilder` - Add connection manager
 - `AddConnectionExpression(connectionName, propertyName, expression string) *PackageBuilder` - Add expression to connection
 - `Build() *Package` - Build the package
-
-### Template API
-
-- `GetDefaultTemplateRegistry() *TemplateRegistry` - Get default template registry
-- `registry.Get(name string) *PackageTemplate` - Get template by name
-- `registry.List() []string` - List available templates
-- `template.Instantiate(params map[string]interface{}) (*Package, error)` - Instantiate template
 
 ### Package Structure
 
@@ -368,6 +401,23 @@ The `Package` type represents a complete DTSX package with the following main co
 
 See the [examples](./examples) directory for complete working examples:
 
+- Per-symbol, consolidated examples: `examples/api_examples.go` — run with:
+
+```bash
+# Run from repository root
+go run examples/api_examples.go
+```
+
+This example demonstrates most exported symbols and writes a sample DTSX file named `output_sample.dtsx` in the current working directory when run.
+
+Regenerate the generated API doc:
+
+```bash
+# From the repository root
+go generate ./...
+```
+
+
 ```bash
 # Analyze package structure
 go run examples/analyze_dtsx.go path/to/your/package.dtsx
@@ -383,9 +433,6 @@ go run examples/package_analysis.go path/to/your/package.dtsx
 
 # Validate package for issues
 go run examples/validate_dtsx.go path/to/your/package.dtsx
-
-# Use package templates
-go run examples/use_templates.go
 
 # Basic read example
 go run examples/read_dtsx.go path/to/your/package.dtsx
@@ -417,11 +464,10 @@ go test ./...
 
 ## Project Structure
 
-```
+```text
 .
 ├── dtsx.go                 # Main package with marshal/unmarshal functions, PackageParser, PrecedenceAnalyzer, PackageValidator
 ├── expression.go           # Advanced SSIS expression evaluator with caching
-├── templates.go            # Reusable package templates
 ├── dtsx_test.go            # Comprehensive tests
 ├── dtsx/
 │   └── schemas/            # Generated schema types
@@ -429,7 +475,6 @@ go test ./...
 ├── schemas/                # XSD schema files
 ├── SSIS_EXAMPLES/          # Sample DTSX files (for testing)
 ├── QUICKSTART.md           # Detailed usage guide
-├── TEMPLATES.md            # Template system documentation
 └── README.md               # This file
 ```
 

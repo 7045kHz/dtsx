@@ -50,6 +50,36 @@ if err == nil {
 // Get all expressions in the package
 expressions := pkg.GetExpressions()
 fmt.Printf("Found %d expressions\n", expressions.Count)
+
+// Get detailed expression analysis
+exprs := expressions.Results.([]*dtsx.ExpressionInfo)
+for _, expr := range exprs {
+    details := dtsx.GetExpressionDetails(expr, pkg)
+    fmt.Printf("Expression: %s (Location: %s)\n", details.Expression, details.Location)
+    if details.EvaluatedValue != "" {
+        fmt.Printf("  Evaluated: %s\n", details.EvaluatedValue)
+    }
+    if len(details.Dependencies) > 0 {
+        fmt.Printf("  Dependencies: %v\n", details.Dependencies)
+    }
+}
+```
+
+### Using Utility Functions
+
+Convenient getter functions for common DTSX element properties:
+
+```go
+// Get connection manager details
+connName := dtsx.GetConnectionName(connectionManager)
+connString := dtsx.GetConnectionString(connectionManager)
+
+// Get variable details
+varName := dtsx.GetVariableName(variable)
+varValue := dtsx.GetVariableValue(variable)
+
+// Get executable details
+execName := dtsx.GetExecutableName(executable)
 ```
 
 ### Update Package Elements
@@ -57,35 +87,69 @@ fmt.Printf("Found %d expressions\n", expressions.Count)
 Modify existing DTSX package elements safely with validation:
 
 ```go
-// Update a variable value
-err := pkg.UpdateVariable("User", "MyVariable", "NewValue")
-if err != nil {
-    log.Printf("Failed to update variable: %v", err)
+// Update a variable value by mutating the package structs directly
+if pkg.Variables != nil && len(pkg.Variables.Variable) > 0 {
+    v := pkg.Variables.Variable[0]
+    if v.VariableValue != nil {
+        v.VariableValue.Value = "NewValue"
+    } else {
+        v.VariableValue = &schema.VariableValue{Value: "NewValue"}
+    }
 }
 
-// Update a connection string
-err = pkg.UpdateConnectionString("MyConnection", "Server=newserver;Database=mydb")
-if err != nil {
-    log.Printf("Failed to update connection: %v", err)
+// Update a connection string by mutating connection manager properties directly
+if pkg.ConnectionManagers != nil && len(pkg.ConnectionManagers.ConnectionManager) > 0 {
+    for _, cm := range pkg.ConnectionManagers.ConnectionManager {
+        var name string
+        for _, prop := range cm.Property {
+            if prop.NameAttr != nil && *prop.NameAttr == "ObjectName" && prop.PropertyElementBaseType != nil && prop.PropertyElementBaseType.AnySimpleType != nil {
+                name = prop.PropertyElementBaseType.AnySimpleType.Value
+            }
+            if prop.NameAttr != nil && *prop.NameAttr == "ConnectionString" && prop.PropertyElementBaseType != nil && prop.PropertyElementBaseType.AnySimpleType != nil && name == "MyConnection" {
+                prop.PropertyElementBaseType.AnySimpleType.Value = "Server=newserver;Database=mydb"
+            }
+        }
+    }
 }
 
-// Update a property expression
-err = pkg.UpdateExpression("Variable", "User::MyVar", "Value", "@[System::StartTime]")
-if err != nil {
-    log.Printf("Failed to update expression: %v", err)
+// Update a property expression by modifying the package struct (for example variable value expression)
+// This is an illustrative example; application logic should find and update the correct target
+if pkg.Variables != nil && len(pkg.Variables.Variable) > 0 {
+    for _, v := range pkg.Variables.Variable {
+        if v.NamespaceAttr != nil && v.ObjectNameAttr != nil && *v.NamespaceAttr+"::"+*v.ObjectNameAttr == "User::MyVar" {
+            if v.PropertyExpression == nil {
+                v.PropertyExpression = []*schema.PropertyExpressionElementType{}
+            }
+            v.PropertyExpression = append(v.PropertyExpression, &schema.PropertyExpressionElementType{
+                NameAttr: "Value",
+                AnySimpleType: &schema.AnySimpleType{Value: "@[System::StartTime]"},
+            })
+            break
+        }
+    }
 }
 
-// Update any property on any element (package, variable, connection, executable)
-err = pkg.UpdateProperty("executable", "MyTask", "Description", "Updated task description")
-if err != nil {
-    log.Printf("Failed to update property: %v", err)
+// Update any property on any element by mutating the struct directly (e.g., executable's description)
+if len(pkg.Executable) > 0 {
+    for _, exec := range pkg.Executable {
+        for _, prop := range exec.Property {
+            if prop.NameAttr != nil && *prop.NameAttr == "Description" {
+                prop.Value = "Updated task description"
+            }
+        }
+    }
 }
 
-// Save the updated package
-err = dtsx.MarshalToFile("updated_package.dtsx", pkg)
+// Serialize then write the updated package (write helpers are internalized)
+data, err := dtsx.Marshal(pkg)
 if err != nil {
     log.Fatal(err)
 }
+// Use the stdlib to write files
+// err = os.WriteFile("updated_package.dtsx", data, 0644)
+// if err != nil {
+//     log.Fatal(err)
+// }
 ```
 
 ## Advanced Features
@@ -150,8 +214,12 @@ pkg := dtsx.NewPackageBuilder().
     AddConnectionExpression("SourceDB", "ConnectionString", "@[User::ConnectionStringVar]").
     Build()
 
-// Save the package
-err := dtsx.MarshalToFile("newpackage.dtsx", pkg)
+// Serialize and write the package (manual write)
+data, err := dtsx.Marshal(pkg)
+if err != nil {
+    log.Fatal(err)
+}
+// err := os.WriteFile("newpackage.dtsx", data, 0644)
 ```
 
 ### Package Validation
@@ -254,6 +322,10 @@ if err == nil {
     }
 }
 
+// Get textual execution flow description
+flowDesc := analyzer.GetExecutionFlowDescription()
+fmt.Print(flowDesc)
+
 // Get the execution chain (all predecessors) for a task
 chain, err := analyzer.GetExecutableChain("Package\\FinalTask")
 if err == nil {
@@ -295,18 +367,17 @@ The validator checks for:
 - Variable scoping issues
 - Structural problems
 
-Built-in templates include:
-
-- **Basic ETL**: Extract-Transform-Load workflow
-- **File Processing**: File operations with error handling
-
 ### Write a DTSX file
 
 ```go
-err := dtsx.MarshalToFile("output.dtsx", pkg)
+data, err := dtsx.Marshal(pkg)
 if err != nil {
     log.Fatal(err)
 }
+// err = os.WriteFile("output.dtsx", data, 0644)
+// if err != nil {
+//     log.Fatal(err)
+// }
 ```
 
 ## Running Examples
@@ -335,6 +406,15 @@ go run examples/build_package.go
 
 # Use reusable package templates
 go run examples/use_templates.go
+
+# Custom template directory management
+go run examples/custom_templates.go
+
+# Use reusable package templates
+go run examples/use_templates.go
+
+# Custom template directory management
+go run examples/custom_templates.go
 
 # Run package with DTExec
 go run examples/run_dtsx.go SSIS_EXAMPLES/ConfigFile.dtsx
@@ -369,7 +449,6 @@ The schema types are generated from official Microsoft SSIS XSD files and suppor
 
 - `dtsx.go` - Main package API, PackageParser, PrecedenceAnalyzer, PackageValidator
 - `expression.go` - Advanced SSIS expression evaluator with caching
-- `templates.go` - Reusable package templates
 - `dtsx/schemas/` - Generated Go types from XSD schemas
 - `examples/` - Example programs including package_analysis.go
 - `SSIS_EXAMPLES/` - Sample DTSX files for testing

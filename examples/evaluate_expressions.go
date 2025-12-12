@@ -50,18 +50,11 @@ func main() {
 		fmt.Println("Available Variables:")
 		vars := variables.Results.([]*schema.VariableType)
 		for _, v := range vars {
-			varName := "unnamed"
-			if v.ObjectNameAttr != nil {
-				varName = *v.ObjectNameAttr
-			}
-			namespace := "User"
-			if v.NamespaceAttr != nil {
-				namespace = *v.NamespaceAttr
-			}
-			fmt.Printf("  %s::%s", namespace, varName)
+			varName := dtsx.GetVariableName(v)
+			fmt.Printf("  %s", varName)
 
-			if v.VariableValue != nil && v.VariableValue.Value != "" {
-				value := v.VariableValue.Value
+			value := dtsx.GetVariableValue(v)
+			if value != "" {
 				if len(value) > 30 {
 					value = value[:27] + "..."
 				}
